@@ -1,0 +1,24 @@
+# QC-02 laptop requirements. Python 3.12 (mitiq 1.1 requires >=3.11,<3.13; ffsim requires >=3.11).
+# Linux or macOS (qiskit-addon-sqd and ffsim do not support native Windows -> use WSL).
+# Version ranges verified against package source/metadata at the release tags on 2026-10-27
+# (see port/README.md for the doc URLs). Install:  pip install -r requirements-laptop.txt
+
+# --- mock (this repo, verified) ---
+numpy>=2.0,<2.3          # addon-sqd/qiskit-nature need >=2; mitiq 1.1 needs <2.3
+scipy>=1.14.1,<=1.17.1   # addon-sqd >=1.14.1; mitiq 1.1 <=1.17.1
+matplotlib>=3.8
+pytest>=8
+
+# --- real stack ---
+pyscf>=2.12,<3           # verified 2.14.0; ffsim needs >=2.12, addon-sqd >=2.9
+qiskit>=2.3,<3           # verified 2.6.1; qiskit-ibm-runtime 0.51 needs >=2.3
+qiskit-aer>=0.17,<0.19   # verified 0.18.2 (EstimatorV2/SamplerV2 primitives, AerSimulator.from_backend)
+qiskit-ibm-runtime>=0.51,<0.52  # verified 0.51.0: fake_provider (FakeFez/FakeTorino), client-side
+                         # executor_estimator.Estimator (added 0.50; legacy EstimatorV2/SamplerV2 deprecated in 0.50)
+qiskit-nature==0.8.*     # verified 0.8.0 (stable/0.8): qiskit>=1.4,<3, needs qiskit-algorithms>=0.4
+qiskit-algorithms>=0.4
+qiskit-addon-sqd>=0.12,<0.15    # verified 0.14.0: diagonalize_fermionic_hamiltonian (0.11+), max_dim (0.12+)
+mitiq==1.1.*             # plain mitiq ONLY: the [qiskit] extra pins qiskit-ibm-runtime~=0.41 and aer~=0.17
+ffsim[qiskit]>=0.0.85,<0.1      # verified 0.0.85: UCJOpSpinBalanced, ffsim.qiskit.generate_lucj_pass_manager
+block2>=0.5.4            # DMRG reference (pyblock2.driver.core.DMRGDriver)
+streamlit                # demo app
