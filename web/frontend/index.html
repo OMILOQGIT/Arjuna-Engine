@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arjuna · N≡N Quantum Chemistry Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Arjuna <span>engine</span></h1>
+    <p>Breaking N≡N to chemical accuracy · Team Arjuna · QC-02 · Chakravyuh</p>
+  </div>
+  <div class="top-right">
+    <button class="btn ghost" id="bigtext" type="button" aria-pressed="false">Large text</button>
+    <a class="btn ghost" href="/offline-lab" target="_blank" rel="noopener">Offline lab</a>
+    <div class="status" id="status" role="status"><span class="dot"></span><span id="status-t">Connecting to engine…</span></div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Stations">
+  <button role="tab" id="tab-explore" aria-controls="explore" aria-selected="true"><b>1</b>Bond explorer</button>
+  <button role="tab" id="tab-adapt" aria-controls="adapt" aria-selected="false"><b>2</b>ADAPT-VQE</button>
+  <button role="tab" id="tab-noise" aria-controls="noise" aria-selected="false"><b>3</b>Noise lab</button>
+  <button role="tab" id="tab-sqd" aria-controls="sqd" aria-selected="false"><b>4</b>SQD rescue</button>
+  <button role="tab" id="tab-runs" aria-controls="runs" aria-selected="false"><b>5</b>Runs</button>
+  <button role="tab" id="tab-proof" aria-controls="proof" aria-selected="false"><b>6</b>Proof</button>
+</nav>
+
+<main>
+<!-- ======================================================= 1. EXPLORER -->
+<section class="station" id="explore" role="tabpanel" aria-labelledby="tab-explore">
+  <div class="intro"><h2>Bond explorer</h2><p>Pick any bond length. The engine solves Hartree–Fock, builds the qubit Hamiltonian, finds the exact answer and runs the classical gold standard, CCSD(T), live.</p></div>
+  <div class="grid">
+    <div class="span-4 stack"><form class="card controls" id="ex-form">
+      <div class="ctl"><label>Active space</label><div class="seg" id="ex-space"><button type="button" data-v="fv108" aria-pressed="true">10 e⁻ · 8 orbitals · 11 qubits</button><button type="button" data-v="cas66" aria-pressed="false">6 e⁻ · 6 orbitals · 7 qubits</button></div></div>
+      <div class="ctl"><label for="ex-r">Bond length <output id="ex-rv">1.098 Å</output></label><input type="range" id="ex-r" min="0.8" max="3.2" step="0.01" value="1.098"></div>
+      <div class="chips" id="ex-chips"></div>
+      <div class="row"><button class="btn primary" id="ex-run" type="submit">Solve at this length</button></div>
+      <details class="more"><summary>Scan a range</summary>
+        <div class="row wrap">
+          <label class="mini">From <input id="sc-from" type="number" step="0.05" min="0.8" max="3.2" value="0.9"></label>
+          <label class="mini">To <input id="sc-to" type="number" step="0.05" min="0.8" max="3.2" value="3.0"></label>
+          <label class="mini">Points <input id="sc-n" type="number" min="2" max="40" value="12"></label>
+          <label class="mini check"><input id="sc-adapt" type="checkbox"> with ADAPT</label>
+        </div>
+        <button class="btn" id="sc-run" type="button">Run scan</button>
+      </details>
+      <div class="job" id="ex-job"></div>
+    </form>
+    <div class="card note"><h3>What this means</h3><div id="ex-story"><p>The curve shows the published study. Points you compute appear as rings. Coupled cluster is not variational, so when it lands below the exact energy it has collapsed, which no correct method can do.</p></div></div>
+    </div>
+    <div class="span-8 stack"><div class="kpis">
+      <div class="card kpi"><span class="v" id="ex-exact">–</span><span class="k">Exact singlet energy (hartree)</span></div>
+      <div class="card kpi"><span class="v" id="ex-cc">–</span><span class="k" id="ex-cc-k">CCSD(T) error</span></div>
+      <div class="card kpi"><span class="v" id="ex-hf">–</span><span class="k">Single arrangement (Hartree–Fock) error</span></div>
+      <div class="card kpi"><span class="v" id="ex-q">–</span><span class="k" id="ex-q-k">Qubits after tapering</span></div>
+    </div>
+    <div class="card"><h3>Energy as the bond stretches</h3><div class="chart" id="ex-pes"></div></div></div>
+    <div class="card span-5"><h3>How far off each method is <small>(mHa, log)</small></h3><div class="chart" id="ex-err"></div></div>
+    <div class="card span-7"><h3>Who is in the electron crowd</h3><div id="ex-wf" class="wf"><p class="empty">Solve a bond length to see its exact wavefunction.</p></div></div>
+  </div>
+</section>
+
+<!-- ======================================================= 2. ADAPT -->
+<section class="station" id="adapt" role="tabpanel" aria-labelledby="tab-adapt" hidden>
+  <div class="intro"><h2>ADAPT-VQE</h2><p>Grow the circuit one brick at a time, always adding the excitation with the largest energy gradient, until it lands within 1.6 mHa of the exact answer.</p></div>
+  <div class="grid">
+    <div class="span-4 stack"><form class="card controls" id="ad-form">
+      <div class="ctl"><label>Active space</label><div class="seg" id="ad-space"><button type="button" data-v="cas66" aria-pressed="true">7 qubits</button><button type="button" data-v="fv108" aria-pressed="false">11 qubits</button></div></div>
+      <div class="ctl"><label for="ad-r">Bond length <output id="ad-rv">2.100 Å</output></label><input type="range" id="ad-r" min="0.8" max="3.2" step="0.01" value="2.1"></div>
+      <div class="ctl"><label for="ad-max">Maximum bricks <output id="ad-maxv">80</output></label><input type="range" id="ad-max" min="5" max="150" step="1" value="80"></div>
+      <div class="row"><button class="btn primary" id="ad-run" type="submit">Run ADAPT-VQE</button></div>
+      <p class="hint">The 7-qubit space takes about 10–40 s. The 11-qubit space can take several minutes per bond length; finished runs are cached.</p>
+      <div class="job" id="ad-job"></div>
+    </form>
+    <div class="card"><h3>Bricks chosen</h3><div class="tablewrap"><table class="tbl" id="ad-ops"><thead><tr><th>#</th><th>Excitation</th><th class="num">Error (mHa)</th></tr></thead><tbody><tr><td colspan="3" class="empty">Run ADAPT to fill this list.</td></tr></tbody></table></div></div>
+    </div>
+    <div class="span-8 stack"><div class="kpis">
+      <div class="card kpi"><span class="v" id="ad-k">–</span><span class="k">Bricks to chemical accuracy</span></div>
+      <div class="card kpi"><span class="v" id="ad-cx">–</span><span class="k" id="ad-cx-k">CNOTs at that point</span></div>
+      <div class="card kpi"><span class="v" id="ad-final">–</span><span class="k">Final error</span></div>
+      <div class="card kpi"><span class="v" id="ad-s2">–</span><span class="k">Final ⟨S²⟩ (0 = singlet)</span></div>
+    </div>
+    <div class="card"><h3>Error as bricks are added <small>(mHa, log)</small></h3><div class="chart" id="ad-chart"></div></div></div>
+  </div>
+</section>
+
+<!-- ======================================================= 3. NOISE -->
+<section class="station" id="noise" role="tabpanel" aria-labelledby="tab-noise" hidden>
+  <div class="intro"><h2>Noise lab</h2><p>Run the accurate circuit through a gate-level density-matrix simulation of a noisy chip, then try the standard fixes: readout correction, zero-noise extrapolation and error cancellation.</p></div>
+  <div class="grid">
+    <div class="span-4 stack"><form class="card controls" id="nz-form">
+      <div class="ctl"><label for="nz-r">Bond length <output id="nz-rv">2.100 Å</output></label><input type="range" id="nz-r" min="0.8" max="3.2" step="0.01" value="2.1"></div>
+      <div class="ctl"><label>Circuit</label><div class="seg" id="nz-depth"><button type="button" data-v="half" aria-pressed="true">Error ≤ 0.8 mHa</button><button type="button" data-v="chem" aria-pressed="false">Error ≤ 1.6 mHa</button></div></div>
+      <div class="ctl"><label for="nz-r2">Two-qubit gate error <output id="nz-r2v">3.0 × 10⁻³</output></label><input type="range" id="nz-r2" min="0" max="16" step="1" value="14"></div>
+      <div class="ctl"><label for="nz-ro">Readout error <output id="nz-rov">1.5%</output></label><input type="range" id="nz-ro" min="0" max="0.05" step="0.001" value="0.015"></div>
+      <div class="row wrap"><button class="btn primary" id="nz-run" type="submit">Simulate</button><button class="btn" id="nz-sweep" type="button">Sweep gate error</button></div>
+      <p class="hint">Today's best chips: two-qubit error about 1–3 × 10⁻³.</p>
+      <div class="job" id="nz-job"></div>
+    </form>
+    <div class="card note"><h3>Error-corrected route</h3><div id="nz-ft"><p>Run a sweep to find the gate quality chemistry needs, and the surface-code size that would get there.</p></div></div>
+    </div>
+    <div class="span-8 stack"><div class="kpis">
+      <div class="card kpi"><span class="v" id="nz-best">–</span><span class="k" id="nz-best-k">Best mitigated error</span></div>
+      <div class="card kpi"><span class="v" id="nz-gates">–</span><span class="k">Gates in the circuit</span></div>
+      <div class="card kpi"><span class="v" id="nz-pec">–</span><span class="k">Shots per term for unbiased error cancellation (PEC)</span></div>
+      <div class="card kpi"><span class="v" id="nz-ideal">–</span><span class="k">Same circuit without noise</span></div>
+    </div>
+    <div class="card"><h3>Each fix, at this noise level</h3><div id="nz-abl" class="bars"><p class="empty">Simulate to compare the fixes.</p></div></div>
+    <div class="card"><h3>How good must the gates be? <small>(mHa, log)</small></h3><div class="chart" id="nz-chart"></div></div></div>
+  </div>
+</section>
+
+<!-- ======================================================= 4. SQD -->
+<section class="station" id="sqd" role="tabpanel" aria-labelledby="tab-sqd" hidden>
+  <div class="intro"><h2>SQD rescue</h2><p>Give the noisy chip a different job: point at the electron arrangements that matter, then solve exactly inside them on a normal computer. The fair test is a fixed budget: does the chip pick better arrangements than chance?</p></div>
+  <div class="grid">
+    <div class="span-4 stack"><form class="card controls" id="sq-form">
+      <div class="ctl"><label>Active space</label><div class="seg" id="sq-space"><button type="button" data-v="fv108" aria-pressed="true">11 qubits</button><button type="button" data-v="cas66" aria-pressed="false">7 qubits</button></div></div>
+      <div class="ctl"><label for="sq-r">Bond length <output id="sq-rv">2.100 Å</output></label><input type="range" id="sq-r" min="0.8" max="3.2" step="0.01" value="2.1"></div>
+      <div class="ctl"><label for="sq-k">Circuit depth <output id="sq-kv">4 bricks</output></label><input type="range" id="sq-k" min="1" max="16" step="1" value="4"></div>
+      <div class="ctl"><label for="sq-r2">Two-qubit gate error <output id="sq-r2v">3.0 × 10⁻³</output></label><input type="range" id="sq-r2" min="0" max="16" step="1" value="14"></div>
+      <div class="row wrap">
+        <label class="mini">Shots <select id="sq-shots"><option>300</option><option>1000</option><option selected>3000</option><option>10000</option></select></label>
+        <label class="mini">Seed <input id="sq-seed" type="number" min="0" value="101"></label>
+      </div>
+      <div class="row"><button class="btn primary" id="sq-run" type="submit">Sample &amp; solve</button></div>
+      <p class="hint">About 30–60 s for the 11-qubit space.</p>
+      <div class="job" id="sq-job"></div>
+    </form>
+    <div class="card note"><h3>Read this before quoting a number</h3><div id="sq-note"><p>Each method may solve exactly only inside the arrangements built from its top picks. Without a budget, enough random bitstrings eventually cover a space this small, so the real payoff is in spaces too large to enumerate (IBM ran SQD on N₂ with 58 qubits).</p></div></div>
+    </div>
+    <div class="span-8 stack"><div class="kpis">
+      <div class="card kpi"><span class="v good" id="sq-chip">–</span><span class="k">Chip-picked arrangements</span></div>
+      <div class="card kpi"><span class="v warn" id="sq-rnd">–</span><span class="k">Random picks, same budget</span></div>
+      <div class="card kpi"><span class="v" id="sq-cls">–</span><span class="k">Classical ranking, same budget</span></div>
+      <div class="card kpi"><span class="v" id="sq-vqe">–</span><span class="k">Plain VQE on the same noisy circuit</span></div>
+    </div>
+    <div class="card">
+      <h3>Error vs share of the space solved <small>(mHa, log)</small></h3>
+      <div class="ctl inline"><label for="sq-budget">Budget <output id="sq-bv">–</output></label><input type="range" id="sq-budget" min="0" max="11" step="1" value="5" disabled></div>
+      <div class="chart" id="sq-chart"></div>
+    </div></div>
+    <div class="card span-12"><h3>Most frequent measurement results</h3><div id="sq-top" class="wf"><p class="empty">Run SQD to see what the chip measured.</p></div></div>
+  </div>
+</section>
+
+<!-- ======================================================= 5. RUNS -->
+<section class="station" id="runs" role="tabpanel" aria-labelledby="tab-runs" hidden>
+  <div class="intro"><h2>Runs</h2><p>Every calculation is a job on the engine. Finished results are cached, so repeating a run is instant.</p></div>
+  <div class="grid">
+    <div class="card span-7">
+      <div class="row between"><h3>Recent jobs</h3><button class="btn ghost" id="rn-clear" type="button">Clear result cache</button></div>
+      <div class="tablewrap"><table class="tbl" id="rn-table"><thead><tr><th>Job</th><th>Parameters</th><th>Status</th><th class="num">Time</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card span-5"><h3>Job detail</h3><pre id="rn-detail" class="pre">Select a job.</pre></div>
+  </div>
+</section>
+
+<!-- ======================================================= 6. PROOF -->
+<section class="station" id="proof" role="tabpanel" aria-labelledby="tab-proof" hidden>
+  <div class="intro"><h2>Proof</h2><p>Run the full regression suite on the engine: integrals and Hartree–Fock against textbook values, CCSD(T) against published references, tapering and ADAPT, the web API against the published study, and the browser engine against the Python engine.</p></div>
+  <div class="grid">
+    <div class="card controls span-4">
+      <button class="btn primary" id="pf-run" type="button">Run all checks</button>
+      <p class="hint">Takes about 3–5 minutes: five suites, including the web API itself.</p>
+      <div class="job" id="pf-job"></div>
+      <h3 class="mt">API</h3>
+      <ul class="api">
+        <li><code>GET /api/health</code></li>
+        <li><code>GET /api/reference</code></li>
+        <li><code>POST /api/jobs</code> <span>{type, params}</span></li>
+        <li><code>GET /api/jobs/&lt;id&gt;</code></li>
+        <li><code>DELETE /api/jobs/&lt;id&gt;</code> <span>cancel</span></li>
+      </ul>
+      <p class="hint">Job types: energies, adapt, noise, noise_sweep, sqd, pes_scan, tests.</p>
+    </div>
+    <div class="span-8" id="pf-suites"><div class="card"><p class="empty">Run the checks to see each suite here.</p></div></div>
+  </div>
+</section>
+</main>
+<footer>Every number on this site is computed by the Arjuna engine (NumPy/SciPy, verified against published values). N₂ / STO-3G prototype.</footer>
+<script src="plot.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
