@@ -1,0 +1,29 @@
+# Render Blueprint for the Arjuna web app (Flask API + frontend + engine).
+# Deploy: push this repo to GitHub, then in Render choose New > Blueprint and pick the repo.
+services:
+  - type: web
+    name: arjuna-engine
+    runtime: python
+    # Free instances have 512 MB. Pre-computed demo results (web/backend/cache) load instantly there,
+    # but fresh 11-qubit runs peak at ~430 MB and the Proof tab spawns extra processes:
+    # pick a 2 GB instance in the dashboard for fully live demos.
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements-web.txt
+    # ONE worker process (jobs are held in memory), several threads for polling requests.
+    startCommand: gunicorn web.backend.wsgi:app --workers 1 --threads 8 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: WORKERS          # parallel engine jobs; 1 keeps memory low
+        value: "1"
+      - key: WARM             # 1 = solve the Hartree–Fock branch at startup (uses CPU for a minute or more)
+        value: "0"
+      - key: PREPARED_CACHE
+        value: "4"
+      - key: ADAPT_CACHE
+        value: "16"
+      - key: SPARSE_CACHE
+        value: "1"
