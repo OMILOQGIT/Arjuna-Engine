@@ -1,7 +1,7 @@
 # Arjuna · N≡N quantum chemistry engine (Team Arjuna, QC-02, Chakravyuh)
 
 **Start the website:** `./run.sh` (macOS/Linux) or `run.bat` (Windows), then open http://localhost:8000.
-Needs Python 3.10+; the script installs numpy, scipy and flask into `.venv`. Docker: `docker build -t arjuna . && docker run -p 8000:8000 arjuna`.
+Needs Python 3.10+; the script installs numpy, scipy and flask into `.venv`. Docker: `docker build -t arjuna . && docker run -p 8000:8000 arjuna`. Render: `render.yaml` Blueprint (see [web/README.md](web/README.md#deploy-on-render)).
 
 | Folder | What it is |
 |---|---|

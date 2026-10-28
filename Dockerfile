@@ -9,4 +9,4 @@ COPY results ./results
 COPY tests ./tests
 ENV HOST=0.0.0.0 PORT=8000 WORKERS=2
 EXPOSE 8000
-CMD ["python", "-m", "web.backend.app"]
+CMD ["sh", "-c", "gunicorn web.backend.wsgi:app --workers 1 --threads 8 --timeout 120 --bind 0.0.0.0:${PORT}"]
