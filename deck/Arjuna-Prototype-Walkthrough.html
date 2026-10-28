@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arjuna Engine Walkthrough</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@300;400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a 1600x900 physicist's blackboard scaled to fit; every drawing is chalk-sketched in code; slides change through an atom whose electrons burst outward and open the next board. Deliberately single-theme (blackboard). */
+:root {
+  --board: #17202b;      /* slate blackboard */
+  --board-2: #1d2733;    /* raised chalk panels */
+  --chalk: #eef1ea;      /* white chalk */
+  --dim: #c7cfd8;        /* body chalk */
+  --faint: #7d8a99;      /* rubbed-out chalk */
+  --cyan: #7fdde4;       /* quantum, our method */
+  --pink: #ff93ba;       /* electrons, highlights */
+  --yellow: #ffd977;     /* plain-words notes */
+  --orange: #ffb067;     /* classical methods */
+  --green: #9fe7a4;      /* verified / pass */
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive;
+  --text: "Kalam", "Segoe Print", "Chalkboard SE", "Comic Sans MS", cursive;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: #0d131a; color: var(--chalk); font-family: var(--text); overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0; box-sizing: border-box;
+}
+#viewport { width: 100%; height: 100%; display: grid; place-items: center; }
+#stage {
+  position: relative; width: 1600px; height: 900px; flex: none; transform-origin: center;
+  background: var(--board); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 0 0 10px #3b2a1e, 0 0 0 12px #241912, 0 30px 80px rgba(0,0,0,.6);
+}
+#dust, #fx { position: absolute; inset: 0; width: 1600px; height: 900px; pointer-events: none; }
+#fx { z-index: 6; }
+
+.slide {
+  position: absolute; inset: 0; box-sizing: border-box; padding: 54px 84px 108px;
+  display: flex; flex-direction: column; gap: 18px;
+  visibility: hidden; opacity: 0;
+  transition: opacity .45s ease, filter .45s ease, transform .5s ease;
+}
+.slide.on { visibility: visible; opacity: 1; }
+.slide.dim { filter: blur(2.5px) brightness(.55); transform: scale(.97); }
+
+.kicker { font-family: var(--text); font-size: 19px; letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); display: flex; gap: 16px; align-items: baseline; }
+.kicker b { color: var(--faint); font-weight: 400; letter-spacing: .06em; text-transform: none; }
+h1, h2 { font-family: var(--hand); font-weight: 700; margin: 0; line-height: 1; text-wrap: balance; letter-spacing: .005em; }
+h2 { font-size: 66px; max-width: 1380px; }
+.hl { color: var(--cyan); }
+.hp { color: var(--pink); }
+.ho { color: var(--orange); }
+.hy { color: var(--yellow); }
+.hg { color: var(--green); }
+.u { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 8 C 30 3, 60 11, 95 6 S 160 3, 198 7' fill='none' stroke='%23ff93ba' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 100% 12px no-repeat; padding-bottom: 8px; }
+p { margin: 0; }
+.txt { font-size: 23px; line-height: 1.45; color: var(--dim); font-weight: 300; }
+.txt b, .txt strong { color: var(--chalk); font-weight: 400; }
+.sm { font-size: 18px; line-height: 1.4; color: var(--faint); font-weight: 300; }
+.mono { font-family: var(--mono); font-size: .82em; color: var(--chalk); }
+.row { display: flex; gap: 40px; flex: 1; min-height: 0; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* note boxes: borders are chalk-sketched by script (data-sk) */
+.note { position: relative; padding: 16px 20px 16px; }
+.note .lab { font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; display: block; margin-bottom: 6px; }
+.plain .lab { color: var(--yellow); }
+.deep .lab { color: var(--cyan); }
+.deep { font-size: 18.5px; line-height: 1.45; color: var(--dim); font-weight: 300; }
+.deep b { color: var(--chalk); font-weight: 400; }
+.skb { position: absolute; left: -6px; top: -6px; overflow: visible; pointer-events: none; }
+
+.big { font-family: var(--hand); font-weight: 700; font-size: 74px; line-height: .95; font-variant-numeric: tabular-nums; }
+.big small { font-size: 30px; color: var(--faint); margin-left: 6px; font-weight: 500; }
+.stat .k { font-size: 18px; color: var(--dim); line-height: 1.35; font-weight: 300; }
+
+svg.d { display: block; overflow: visible; }
+svg.d text { font-family: var(--text); fill: var(--dim); }
+.ink { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.slide.on .ink { animation: ink .75s cubic-bezier(.45,.05,.3,1) forwards; }
+@keyframes ink { to { stroke-dashoffset: 0; } }
+.fade { opacity: 0; }
+.slide.on .fade { animation: fadeIn .55s ease forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.slide .rv { opacity: 0; transform: translateY(10px); }
+.slide.on .rv { animation: rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+.spin { transform-box: view-box; animation: spin var(--t, 9s) linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* jargon with a chalk definition on hover/focus */
+.term { border-bottom: 2px dotted var(--faint); cursor: help; position: relative; outline: none; }
+.term:hover::after, .term:focus::after {
+  content: attr(data-def); position: absolute; left: 0; bottom: calc(100% + 10px); z-index: 20;
+  width: 360px; padding: 12px 14px; background: #0f161e; border: 2px solid var(--yellow); border-radius: 10px 14px 9px 13px;
+  font: 300 17px/1.4 var(--text); color: var(--chalk); text-transform: none; letter-spacing: 0; white-space: normal;
+}
+
+/* flow cards */
+.cards { position: relative; display: grid; gap: 34px 44px; }
+.card { position: relative; padding: 14px 18px 14px; display: flex; flex-direction: column; gap: 5px; }
+.card .n { font-family: var(--hand); font-size: 26px; color: var(--pink); line-height: 1; font-weight: 700; }
+.card h3 { margin: 0; font-family: var(--hand); font-size: 36px; line-height: 1; font-weight: 700; color: var(--chalk); }
+.card .m { font-size: 18px; line-height: 1.35; color: var(--dim); font-weight: 300; }
+.card .t { font-family: var(--mono); font-size: 14.5px; color: var(--cyan); }
+.card .v { font-family: var(--hand); font-size: 25px; color: var(--yellow); line-height: 1.05; margin-top: auto; }
+.overlay { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+
+/* stack */
+.stack { display: grid; grid-template-columns: 190px 1fr 1fr; gap: 14px 46px; position: relative; flex: 1; }
+.stack .lay { font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; color: var(--yellow); display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.stack .lay span { font-family: var(--text); font-size: 14.5px; color: var(--faint); font-weight: 300; line-height: 1.3; }
+.stack .box { position: relative; padding: 9px 14px; font-size: 17px; line-height: 1.33; color: var(--dim); font-weight: 300; display: block; align-self: center; }
+.stack .box b { color: var(--chalk); font-weight: 400; }
+.stack .box .mono { font-size: 13.5px; color: var(--green); display: block; margin-top: 3px; }
+.stack .head { font-family: var(--hand); font-size: 32px; font-weight: 700; line-height: 1; display: flex; flex-direction: column; gap: 4px; }
+
+/* chrome */
+#chrome { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; display: flex; align-items: center; gap: 18px; padding: 0 40px; z-index: 8; pointer-events: none; }
+#chrome > * { pointer-events: auto; }
+.nav { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--faint); background: transparent; color: var(--chalk); font: 700 24px/1 var(--hand); cursor: pointer; display: grid; place-items: center; transition: border-color .2s, color .2s; }
+.nav:hover { border-color: var(--cyan); color: var(--cyan); }
+#dots { display: flex; gap: 9px; align-items: center; }
+#dots button { width: 12px; height: 12px; padding: 0; border-radius: 50%; border: 2px solid var(--faint); background: transparent; cursor: pointer; transition: transform .25s, background .25s, border-color .25s; }
+#dots button[aria-current="true"] { background: var(--pink); border-color: var(--pink); transform: scale(1.3); }
+#help { font: 300 16px var(--text); color: var(--faint); }
+button:focus-visible, .term:focus-visible { outline: 2px dashed var(--yellow); outline-offset: 4px; }
+#tile { margin-left: auto; position: relative; min-width: 190px; padding-right: 8px; height: 70px; display: flex; align-items: center; gap: 12px; }
+#tile svg { flex: none; }
+#tile .el { display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; }
+#tile .z { font: 500 15px var(--mono); color: var(--faint); grid-column: 1; }
+#tile .sym { font: 700 42px/1 var(--hand); color: var(--chalk); grid-column: 2; grid-row: 1 / 3; }
+#tile .nm { font: 300 14px var(--text); color: var(--faint); grid-column: 1; }
+
+#notes {
+  position: absolute; left: 40px; right: 40px; bottom: 92px; z-index: 9; padding: 18px 24px 20px;
+  background: rgba(13,19,26,.95); border: 2px solid var(--yellow); border-radius: 14px 10px 16px 12px;
+  font: 300 21px/1.5 var(--text); color: var(--chalk); max-height: 300px; overflow: auto;
+}
+#notes h4 { margin: 0 0 6px; font: 700 26px var(--hand); color: var(--yellow); }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide.on .ink, .slide.on .fade, .slide.on .rv { animation: none !important; transition: none !important; }
+  .ink { stroke-dashoffset: 0; } .fade, .slide .rv { opacity: 1; transform: none; }
+  .spin { animation: none; }
+}
+
+html, body { margin: 0; height: 100%; }
+#viewport { position: fixed; inset: 0; overflow: hidden; display: block !important; }
+#stage { position: absolute !important; left: 50%; top: 50%; transform-origin: center center; }
+@media (orientation: portrait) and (max-width: 700px) {
+  body::after { content: "Turn your phone sideways for a bigger view"; position: fixed; left: 0; right: 0; bottom: max(24px, env(safe-area-inset-bottom, 0px)); text-align: center; color: #7d8a99; font: 15px system-ui, sans-serif; }
+}
+</style>
+</head>
+<body>
+
+
+<div id="viewport">
+<div id="stage" role="region" aria-roledescription="slide deck" aria-label="The Arjuna engine, prototype walkthrough">
+<canvas id="dust" width="1600" height="900" aria-hidden="true"></canvas>
+
+
+<!-- 1 · H · WHAT IT IS -->
+<section class="slide" data-el="1" data-sym="H" data-name="Hydrogen" data-tag="The prototype">
+  <div class="kicker rv" style="animation-delay:.1s">Team Arjuna · QC-02 <b>· prototype walkthrough · Chakravyuh hackathon</b></div>
+  <div class="row" style="align-items:center;gap:24px">
+    <div class="col" style="width:780px;gap:26px">
+      <h1 class="rv" style="font-size:128px;animation-delay:.25s">The <span class="hl">Arjuna</span> engine</h1>
+      <p class="txt rv" style="font-size:29px;line-height:1.38;animation-delay:.45s">A quantum-chemistry engine you drive from a browser. Pick any N≡N bond length and watch it <b>solve the molecule</b>, <b>build the quantum circuit</b>, run it on a <b>simulated noisy chip</b> and <b>rescue the answer</b>, live.</p>
+      <div class="rv" style="display:flex;gap:48px;margin-top:12px;animation-delay:.7s">
+        <div class="stat"><div class="big hl">any</div><div class="k">bond length from<br>0.80 to 3.20 Å</div></div>
+        <div class="stat"><div class="big hp">6</div><div class="k">live stations,<br>one engine</div></div>
+        <div class="stat"><div class="big hg">87</div><div class="k">automated checks,<br>all passing</div></div>
+      </div>
+    </div>
+    <svg class="d" id="w-art" width="700" height="560" viewBox="0 0 700 560" aria-label="Sketch of a browser window running the engine on a nitrogen molecule"></svg>
+  </div>
+  <p class="sm rv" style="animation-delay:1s">Press → or click to move · N for speaker notes · F for fullscreen</p>
+</section>
+
+<!-- 2 · He · ARCHITECTURE -->
+<section class="slide" data-el="2" data-sym="He" data-name="Helium" data-tag="How it fits together">
+  <div class="kicker rv">How it works <b>· the architecture</b></div>
+  <h2 class="rv" style="animation-delay:.15s;font-size:58px">Your click becomes a <span class="hy">job</span>; the <span class="hl">real engine</span> answers it</h2>
+  <svg class="d" id="arch" width="1316" height="395" viewBox="0 0 1432 430" style="align-self:center" aria-label="Architecture: browser, API, job manager, engine, result cache"></svg>
+  <div class="row" style="gap:36px;flex:none">
+    <div class="note plain" data-sk="yellow" style="flex:1"><span class="lab">In plain words</span><p class="txt" style="font-size:20px">The website never makes up a number. Each button sends a request; the server checks it, runs our verified code on a worker and <b>streams progress back so the charts fill in while it computes</b>. Finished answers are saved, so asking again is instant.</p></div>
+    <div class="note deep" data-sk="cyan" style="flex:1"><span class="lab">Under the hood</span><p>Flask API: <span class="mono">POST /api/jobs</span> returns a job id; <span class="mono">GET /api/jobs/&lt;id&gt;</span> gives status, progress, log and partial results; <span class="mono">DELETE</span> cancels. Two worker threads. Results cached on disk by job type + parameters + engine version. Plain Python 3 with NumPy, SciPy and Flask, no build step.</p></div>
+  </div>
+</section>
+
+<!-- 3 · Li · ONE CLICK -->
+<section class="slide" data-el="3" data-sym="Li" data-name="Lithium" data-tag="One click, end to end">
+  <div class="kicker rv">How it works <b>· following one request</b></div>
+  <h2 class="rv" style="animation-delay:.15s">One click, end to end: <span class="hp">"solve at 2.10 Å"</span></h2>
+  <div class="row" style="gap:40px">
+    <svg class="d" id="trace" width="930" height="600" viewBox="0 0 930 600" aria-label="Timeline of one request through the engine"></svg>
+    <div class="col" style="flex:1;gap:22px">
+      <div class="rv" style="display:flex;gap:40px;animation-delay:.5s">
+        <div class="stat"><div class="big hy">22<small>s</small></div><div class="k">first time</div></div>
+        <div class="stat"><div class="big hg">0<small>s</small></div><div class="k">every repeat (cached)</div></div>
+      </div>
+      <div class="note deep" data-sk="cyan"><span class="lab">What comes back</span><p class="mono" style="font-size:15px;line-height:1.55;color:var(--dim);display:block">{ "exact": −107.448604,<br>&nbsp;&nbsp;"ccsd_t": −107.592661,<br>&nbsp;&nbsp;"err_mHa": { "ccsd_t": −144.06 },<br>&nbsp;&nbsp;"cc_verdict": "collapsed below<br>&nbsp;&nbsp;&nbsp;&nbsp;the exact energy",<br>&nbsp;&nbsp;"qubits": 16, "qubits_tapered": 11,<br>&nbsp;&nbsp;"wavefunction": { "hf_weight": 0.192, … } }</p></div>
+      <div class="note plain" data-sk="yellow"><span class="lab">Why it's trustworthy</span><p class="txt" style="font-size:19px">At the 12 bond lengths in our study, the website returns <b>exactly the published numbers</b>: energies, circuit sizes and noise results. A test checks this every run.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · Be · STATIONS -->
+<section class="slide" data-el="4" data-sym="Be" data-name="Beryllium" data-tag="Six stations">
+  <div class="kicker rv">What you can do <b>· the six stations</b></div>
+  <h2 class="rv" style="animation-delay:.15s">Six stations, <span class="hl">one engine</span>, every number live</h2>
+  <div class="cards" style="grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;flex:1;gap:30px 40px">
+    <div class="card" data-sk="chalk"><span class="n">1</span><h3>Bond explorer</h3><p class="m">Pick any bond length. See the exact energy, the gold standard's error and who is in the electron crowd.</p><span class="t">Hartree–Fock · Jordan–Wigner · tapering · exact · CCSD(T)</span><span class="v">CCSD(T) collapses −144 mHa at 2.1 Å</span></div>
+    <div class="card" data-sk="cyan"><span class="n">2</span><h3>ADAPT-VQE</h3><p class="m">Watch the circuit grow one brick at a time until it lands within 1.6 mHa.</p><span class="t">singlet-pinned ADAPT · BFGS · circuit compiler</span><span class="v">35 bricks, 1,728 CNOTs at 2.1 Å</span></div>
+    <div class="card" data-sk="orange"><span class="n">3</span><h3>Noise lab</h3><p class="m">Turn the chip's error up or down, try every fix, sweep to find the gate quality chemistry needs.</p><span class="t">density matrix · readout fix · ZNE · PEC · surface code</span><span class="v">needs gates 30–100× better</span></div>
+    <div class="card" data-sk="green"><span class="n">4</span><h3>SQD rescue</h3><p class="m">The noisy chip picks arrangements; chip vs random vs classical at the same budget.</p><span class="t">sampling · configuration recovery · exact subspace solve</span><span class="v">9.6 mHa vs 160 random, at 25%</span></div>
+    <div class="card" data-sk="chalk"><span class="n">5</span><h3>Runs</h3><p class="m">Every job with its inputs, progress log, timing and full result.</p><span class="t">job history · JSON · result cache</span><span class="v">repeat runs are instant</span></div>
+    <div class="card" data-sk="green"><span class="n">6</span><h3>Proof</h3><p class="m">One button runs every test suite on the server and shows each result.</p><span class="t">Python engine · web API · browser engine</span><span class="v">87 checks pass</span></div>
+  </div>
+</section>
+
+<!-- 5 · B · PROOF + RUN -->
+<section class="slide" data-el="5" data-sym="B" data-name="Boron" data-tag="Proven, and how to run it">
+  <div class="kicker rv">The build <b>· proof, and how to run it</b></div>
+  <h2 class="rv" style="animation-delay:.15s">What's <span class="hg">proven</span>, and how to <span class="hl">run it yourself</span></h2>
+  <div class="row" style="gap:44px">
+    <svg class="d" id="checks5" width="640" height="470" viewBox="0 0 640 470" aria-label="Checklist of passing test suites"></svg>
+    <div class="col" style="flex:1;gap:26px">
+      <div class="note deep" data-sk="cyan"><span class="lab">Run it</span>
+        <p style="font-size:19px">Unzip, then one command: <span class="mono">./run.sh</span> (Windows: <span class="mono">run.bat</span>) → open <span class="mono">localhost:8000</span>. Python 3.10+; installs NumPy, SciPy and Flask itself.</p>
+        <p style="font-size:19px;margin-top:8px">Docker: <span class="mono">docker run -p 8000:8000 arjuna</span> · no server at all: <span class="mono">lab/arjuna-lab.html</span> runs offline in any browser.</p></div>
+      <div class="note deep" data-sk="orange"><span class="lab" style="color:var(--orange)">Limits we state up front</span><p style="font-size:19px">Minimal STO-3G basis, so exact answers are still classical. Chip noise is simulated (depolarising, all-to-all). Built for a laptop demo, not public hosting. The port to IBM's tools is written but not yet run.</p></div>
+      <div class="note plain" data-sk="yellow"><span class="lab">Next</span><p class="txt" style="font-size:20px">Realistic basis with PySCF, IBM noise models, IBM's SQD, one real IBM run, all behind <b>the same website</b>.</p></div>
+    </div>
+  </div>
+</section>
+
+<canvas id="fx" width="1600" height="900" aria-hidden="true"></canvas>
+<div id="notes" hidden><h4 id="notes-h"></h4><div id="notes-b"></div></div>
+<div id="chrome">
+  <button class="nav" id="prev" aria-label="Previous slide">←</button>
+  <button class="nav" id="next" aria-label="Next slide">→</button>
+  <div id="dots" role="tablist" aria-label="Slides"></div>
+  <button class="nav" id="nbtn" aria-label="Toggle speaker notes" style="width:auto;padding:0 14px;border-radius:22px;font-size:20px">notes</button>
+  <span id="help"></span>
+  <div id="tile" aria-live="polite">
+    <svg id="bohr" width="70" height="70" viewBox="-35 -35 70 70" aria-hidden="true"></svg>
+    <div class="el"><span class="z" id="tz">1</span><span class="sym" id="ts">H</span><span class="nm" id="tn">Hydrogen</span></div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const COL = { chalk: "var(--chalk)", dim: "var(--dim)", faint: "var(--faint)", cyan: "var(--cyan)", pink: "var(--pink)", yellow: "var(--yellow)", orange: "var(--orange)", green: "var(--green)" };
+const HEX = { chalk: "#eef1ea", cyan: "#7fdde4", pink: "#ff93ba", yellow: "#ffd977", orange: "#ffb067", green: "#9fe7a4", faint: "#7d8a99" };
+
+/* ---------- chalk sketch toolkit ---------- */
+function mkRng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let R = mkRng(42);
+const J = a => (R() - .5) * 2 * a;
+function catmull(pts, closed) {
+  if (pts.length < 3) return "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L");
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, pts.length - 1)];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+class Pad {
+  constructor(svg, o = {}) { this.svg = typeof svg === "string" ? document.getElementById(svg) : svg; this.i = 0; this.base = o.base ?? .35; this.step = o.step ?? .045; this.span = o.span ?? 1.8; }
+  delay(o) { const d = o.delay ?? (this.base + Math.min(this.i++ * this.step, this.span)); return d; }
+  el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || this.g || this.svg).appendChild(e); return e; }
+  group(attrs = {}) { const g = this.el("g", attrs); return g; }
+  ink(d, o = {}) {
+    const p = this.el("path", { d, pathLength: 1, class: "ink" }, o.parent);
+    p.style.stroke = COL[o.c || "chalk"] || o.c; p.style.strokeWidth = o.w ?? 2.6; p.style.opacity = o.o ?? .95;
+    if (o.dash) { p.setAttribute("class", "fade"); p.style.strokeDasharray = o.dash; p.style.fill = "none"; p.style.strokeLinecap = "round"; }
+    p.style.animationDelay = (o.d ?? this.delay(o)) + "s";
+    if (o.dur) p.style.animationDuration = o.dur + "s";
+    return p;
+  }
+  seg(x1, y1, x2, y2, j) {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, b = J(Math.min(L * .025, 5));
+    const ov = Math.min(L * .04, 4);
+    const sx = x1 - dx / L * J(ov) + J(j), sy = y1 - dy / L * J(ov) + J(j), ex = x2 + dx / L * J(ov) + J(j), ey = y2 + dy / L * J(ov) + J(j);
+    const mx = (sx + ex) / 2 + nx * b, my = (sy + ey) / 2 + ny * b;
+    return `M${sx.toFixed(1)} ${sy.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+  }
+  line(x1, y1, x2, y2, o = {}) {
+    const d = this.delay(o), j = o.j ?? 1.4;
+    this.ink(this.seg(x1, y1, x2, y2, j), { ...o, d });
+    if (!o.single) this.ink(this.seg(x1, y1, x2, y2, j), { ...o, d: d + .08, o: (o.o ?? .95) * .45, w: (o.w ?? 2.6) * .7 });
+  }
+  poly(pts, o = {}) {
+    const d = this.delay(o), j = o.j ?? .7;
+    const mk = () => (o.smooth ? catmull(pts.map(p => [p[0] + J(j), p[1] + J(j)])) : "M" + pts.map(p => (p[0] + J(j)).toFixed(1) + " " + (p[1] + J(j)).toFixed(1)).join("L"));
+    this.ink(mk(), { ...o, d, dur: o.dur ?? 1.3 });
+    if (!o.single) this.ink(mk(), { ...o, d: d + .1, o: (o.o ?? .95) * .4, w: (o.w ?? 2.6) * .6, dur: o.dur ?? 1.3 });
+  }
+  ell(cx, cy, rx, ry, o = {}) {
+    const d = this.delay(o), rot = (o.rot || 0) * Math.PI / 180;
+    const mk = () => {
+      const pts = [], N = 26, a0 = R() * Math.PI * 2, over = .25 + R() * .25, ph = R() * 6;
+      for (let k = 0; k <= N; k++) {
+        const a = a0 + k / N * (Math.PI * 2 + over), f = 1 + .018 * Math.sin(a * 2 + ph) + J(.006);
+        const x = Math.cos(a) * rx * f, y = Math.sin(a) * ry * f;
+        pts.push([cx + x * Math.cos(rot) - y * Math.sin(rot), cy + x * Math.sin(rot) + y * Math.cos(rot)]);
+      }
+      return catmull(pts);
+    };
+    this.ink(mk(), { ...o, d });
+    if (!o.single) this.ink(mk(), { ...o, d: d + .08, o: (o.o ?? .95) * .4, w: (o.w ?? 2.6) * .7 });
+  }
+  rect(x, y, w, h, o = {}) {
+    const d = this.delay(o), j = o.j ?? 1.6;
+    for (let pass = 0; pass < (o.single ? 1 : 2); pass++) {
+      const oo = { ...o, d: d + pass * .1, o: pass ? (o.o ?? .95) * .45 : o.o, w: pass ? (o.w ?? 2.4) * .7 : (o.w ?? 2.4) };
+      this.ink(this.seg(x, y, x + w, y, j) + this.seg(x + w, y, x + w, y + h, j).replace("M", "M") + this.seg(x + w, y + h, x, y + h, j) + this.seg(x, y + h, x, y, j), oo);
+    }
+  }
+  arrow(x1, y1, x2, y2, o = {}) {
+    const d = this.delay(o), bend = o.bend || 0, hs = o.head ?? 13;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, L = Math.hypot(x2 - x1, y2 - y1) || 1, nx = -(y2 - y1) / L, ny = (x2 - x1) / L;
+    const cx = mx + nx * bend, cy = my + ny * bend;
+    const path = `M${x1.toFixed(1)} ${y1.toFixed(1)}Q${(cx + J(2)).toFixed(1)} ${(cy + J(2)).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+    this.ink(path, { ...o, d });
+    const ang = Math.atan2(y2 - cy, x2 - cx);
+    const h1 = [x2 - hs * Math.cos(ang - .45), y2 - hs * Math.sin(ang - .45)], h2 = [x2 - hs * Math.cos(ang + .45), y2 - hs * Math.sin(ang + .45)];
+    this.ink(`M${h1[0].toFixed(1)} ${h1[1].toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}L${h2[0].toFixed(1)} ${h2[1].toFixed(1)}`, { ...o, d: d + .45, dash: null });
+    if (o.label) this.text((cx + x2) / 2 + (o.lx || 0), (cy + y2) / 2 + (o.ly || -10), o.label, { size: o.ls || 17, c: o.lc || "faint", anchor: o.la || "middle", d: d + .3 });
+  }
+  text(x, y, s, o = {}) {
+    const t = this.el("text", { x, y, "text-anchor": o.anchor || "start", class: "fade" }, o.parent);
+    t.style.fontSize = (o.size || 18) + "px"; t.style.fill = COL[o.c || "dim"] || o.c;
+    if (o.font === "hand") { t.style.fontFamily = "var(--hand)"; t.style.fontWeight = 700; }
+    if (o.font === "mono") t.style.fontFamily = "var(--mono)";
+    if (o.weight) t.style.fontWeight = o.weight;
+    if (o.rot) t.setAttribute("transform", `rotate(${o.rot} ${x} ${y})`);
+    t.style.animationDelay = (o.d ?? this.delay(o)) + "s";
+    t.textContent = s; return t;
+  }
+  dot(x, y, r, o = {}) { const c = this.el("circle", { cx: x, cy: y, r, class: "fade" }, o.parent); c.style.fill = COL[o.c || "chalk"] || o.c; c.style.animationDelay = (o.d ?? this.delay(o)) + "s"; if (o.glow) c.style.filter = "drop-shadow(0 0 6px " + (HEX[o.c] || "#fff") + ")"; return c; }
+  hatch(x, y, w, h, c, o = {}) {
+    const id = "hc" + (Pad.n = (Pad.n || 0) + 1);
+    const cp = this.el("clipPath", { id }, this.svg); this.el("rect", { x, y, width: Math.max(w, 0), height: Math.max(h, 0) }, cp);
+    const g = this.el("g", { class: "fade", "clip-path": `url(#${id})` }, o.parent); g.style.animationDelay = (o.d ?? this.delay(o)) + "s";
+    const step = o.step || 7, op = o.o ?? .55;
+    for (let s = -h; s < w; s += step) {
+      const l = this.el("line", { x1: (x + s + J(.8)).toFixed(1), y1: (y + h).toFixed(1), x2: (x + s + h + J(.8)).toFixed(1), y2: y.toFixed(1) }, g);
+      l.style.stroke = COL[c] || c; l.style.strokeWidth = 1.6; l.style.opacity = op; l.style.strokeLinecap = "round";
+    }
+    return g;
+  }
+}
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
+const logs = (d0, d1, r0, r1) => { const a = Math.log10(d0), b = Math.log10(d1); return v => r0 + (Math.log10(v) - a) / (b - a) * (r1 - r0); };
+const sup = n => String(n).replace(/-/g, "⁻").replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+const pow10 = v => { const e = Math.round(Math.log10(v)); return e === 0 ? "1" : e === 1 ? "10" : e === 2 ? "100" : e === 3 ? "1,000" : "10" + sup(e); };
+function axesXY(p, o) {
+  const { x, y, W, H, m } = o;
+  p.line(m.l, H - m.b, W - m.r, H - m.b, { c: "faint", w: 2, single: true });
+  p.line(m.l, H - m.b, m.l, m.t, { c: "faint", w: 2, single: true });
+  (o.yt || []).forEach(v => { p.text(m.l - 10, y(v) + 6, o.yf ? o.yf(v) : v, { anchor: "end", size: 16, c: "faint" }); p.line(m.l - 5, y(v), m.l + 5, y(v), { c: "faint", w: 1.6, single: true }); });
+  (o.xt || []).forEach(v => { p.text(x(v), H - m.b + 24, o.xf ? o.xf(v) : v, { anchor: "middle", size: 16, c: "faint" }); });
+  if (o.xl) p.text((m.l + W - m.r) / 2, H - 4, o.xl, { anchor: "middle", size: 17, c: "faint" });
+  if (o.yl) p.text(m.l - 10, m.t - 12, o.yl, { anchor: "start", size: 17, c: "faint" });
+}
+function budget(p, x0, x1, yv, label, o = {}) {
+  p.ink(`M${x0} ${yv}L${x1} ${yv}`, { c: "green", w: 2.2, dash: "3 8", d: o.d ?? .5 });
+  p.text(o.lx ?? x1 - 4, yv + (o.below ? 22 : -9), label, { anchor: o.anchor || "end", size: 17, c: "green", d: o.d ?? .5 });
+}
+
+/* ---------- slide drawings ---------- */
+function drawN2(p, cx, cy, sep, r, o = {}) {
+  const ax = cx - sep / 2, bx = cx + sep / 2;
+  p.ell(ax, cy, r, r * .98, { c: "chalk", w: 3.2 });
+  p.ell(bx, cy, r, r * .98, { c: "chalk", w: 3.2 });
+  p.text(ax, cy + r * .32, "N", { anchor: "middle", size: r * .95, font: "hand", c: "chalk" });
+  p.text(bx, cy + r * .32, "N", { anchor: "middle", size: r * .95, font: "hand", c: "chalk" });
+  if (!o.broken) [-1, 0, 1].forEach(k => p.line(ax + r + 6, cy + k * r * .26, bx - r - 6, cy + k * r * .26, { c: "cyan", w: 4 }));
+}
+function spinG(g, t) {
+  if (REDUCE) return;
+  const a = document.createElementNS(NS, "animateTransform");
+  a.setAttribute("attributeName", "transform"); a.setAttribute("type", "rotate"); a.setAttribute("from", "0 0 0"); a.setAttribute("to", "360 0 0");
+  a.setAttribute("dur", t + "s"); a.setAttribute("repeatCount", "indefinite"); g.appendChild(a);
+}
+function orbitDots(svg, cx, cy, rx, ry, rot, n, color, t) {
+  const g = document.createElementNS(NS, "g"); g.setAttribute("transform", `translate(${cx} ${cy}) rotate(${rot})`);
+  const inner = document.createElementNS(NS, "g"); spinG(inner, t);
+  for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; const c = document.createElementNS(NS, "circle"); c.setAttribute("cx", (Math.cos(a) * rx).toFixed(1)); c.setAttribute("cy", (Math.sin(a) * rx).toFixed(1)); c.setAttribute("r", 6); c.style.fill = HEX[color]; c.style.filter = `drop-shadow(0 0 6px ${HEX[color]})`; inner.appendChild(c); }
+  const sq = document.createElementNS(NS, "g"); sq.setAttribute("transform", `scale(1 ${ry / rx})`); sq.appendChild(inner); g.appendChild(sq); svg.appendChild(g);
+}
+
+
+const NOTES = [
+  "This is what we built. The Arjuna engine is a quantum-chemistry engine you drive from a web browser. You pick a bond length for nitrogen, anywhere from 0.8 to 3.2 ångström, and it solves the molecule, builds the quantum circuit, runs it on a simulated noisy chip and rescues the answer, all live. Six stations, one engine, and 87 automated checks that all pass.",
+  "Here's how it fits together. Every button in the browser sends a request to our server. The server checks it, turns it into a job and runs our verified Python engine on a worker thread. While it computes, the browser asks for progress about twice a second, so charts fill in live. When it's done, the answer is saved, so the same question is instant next time. The website never makes up a number: everything comes from the engine.",
+  "Let's follow one click: solve at 2.1 ångström. The request goes to the server. Hartree–Fock walks out from equilibrium one step at a time, so it stays on the right solution. We zoom into ten electrons in eight orbitals, translate to qubits and use symmetry to go from 16 qubits to 11. Then the exact answer from 3,136 arrangements, and the gold standard CCSD(T). It comes back 144 milli-hartree below the exact energy: collapsed. 22 seconds the first time, instant after that. And at our 12 study bond lengths the website returns exactly the published numbers; a test checks that.",
+  "Six stations. Bond explorer: any bond length, exact energy versus the gold standard. ADAPT-VQE: watch the circuit grow brick by brick, 35 bricks at 2.1 ångström. Noise lab: turn the chip's error up and down and see that today's chips need to be 30 to 100 times better for this circuit. SQD rescue: the noisy chip picks arrangements, compared fairly against random and classical picks at the same budget. Runs: every job with its full result. Proof: one button runs every test on the server.",
+  "What's proven: integrals and Hartree–Fock against textbook values, coupled cluster against published references, tapering and ADAPT, the web API against our published study, and the browser engine against the Python engine. 87 checks, all passing. To run it: unzip, one command, open localhost 8000; or Docker; or the offline lab with no server at all. Limits up front: minimal basis, simulated noise, laptop server, and the IBM port isn't run yet. Next: a realistic basis, IBM noise models and one real IBM run, behind the same website. Thank you."
+];
+
+function w1() {
+  const p = new Pad("w-art", { base: .5, step: .05 });
+  p.rect(30, 40, 640, 440, { c: "chalk", w: 2.6 });
+  p.line(30, 86, 670, 86, { c: "faint", w: 2, single: true });
+  [58, 82, 106].forEach((x, i) => p.ell(x, 63, 8, 8, { c: ["pink", "yellow", "green"][i], w: 2, single: true }));
+  p.rect(140, 52, 380, 24, { c: "faint", w: 1.6, single: true });
+  p.text(156, 70, "localhost:8000", { size: 17, font: "mono", c: "dim" });
+  drawN2(p, 190, 210, 190, 50);
+  p.text(190, 300, "R = 2.10 Å", { anchor: "middle", size: 26, font: "hand", c: "pink", d: 1.3 });
+  // mini error chart
+  const X = lin(.9, 3.0, 350, 640), Y = logs(.3, 400, 330, 120);
+  p.line(350, 330, 645, 330, { c: "faint", w: 1.8, single: true }); p.line(350, 330, 350, 112, { c: "faint", w: 1.8, single: true });
+  p.ink(`M350 ${Y(1.6)}L645 ${Y(1.6)}`, { c: "green", w: 2, dash: "3 7", d: 1 });
+  const cc = [[.9, .66], [1.098, 2.2], [1.35, 7.4], [1.5, 10.8], [1.7, .8]];
+  p.poly(cc.map(([x, y]) => [X(x), Y(y)]), { c: "orange", w: 3, d: 1.2 });
+  [[1.9, 64], [2.1, 144], [3.0, 280]].forEach(([x, y], i) => { const xx = X(x), yy = Y(y); p.ink(`M${xx - 8} ${yy - 7}L${xx + 8} ${yy - 7}L${xx} ${yy + 8}Z`, { c: "pink", w: 2.6, d: 1.6 + i * .1 }); });
+  const ad = [[.9, .1], [1.35, 1.2], [1.7, .9], [2.1, .3], [2.7, .06], [3.0, .03]];
+  p.poly(ad.map(([x, y]) => [X(x), Y(Math.max(y, .32))]), { c: "cyan", w: 3, d: 1.5 });
+  p.text(512, 246, "▼ collapsed", { size: 18, font: "hand", c: "pink", d: 1.9 });
+  // progress bar + tabs
+  p.text(60, 380, "ADAPT-VQE · iteration 35 · 1,728 CNOTs", { size: 18, font: "mono", c: "cyan", d: 1.7 });
+  p.rect(60, 398, 580, 18, { c: "faint", w: 1.6, single: true, d: 1.7 });
+  p.hatch(62, 400, 470, 14, "cyan", { d: 1.9, o: .7 });
+  ["explore", "ADAPT", "noise", "SQD", "runs", "proof"].forEach((t, i) => { p.rect(60 + i * 98, 432, 86, 32, { c: i === 1 ? "cyan" : "faint", w: 1.6, single: true, d: 2 + i * .05 }); p.text(103 + i * 98, 454, t, { anchor: "middle", size: 16, c: i === 1 ? "cyan" : "faint", d: 2.05 + i * .05 }); });
+  p.arrow(350, 540, 350, 488, { c: "yellow", w: 2.6, d: 2.3 });
+  p.text(370, 536, "the real engine answers every click", { size: 22, font: "hand", c: "yellow", d: 2.4 });
+  orbitDots(p.svg, 190, 210, 150, 52, -15, 3, "pink", 7);
+}
+
+function w2() {
+  const p = new Pad("arch", { base: .45, step: .05 });
+  const B = (x, y, w, h, c, title, lines, d) => {
+    p.rect(x, y, w, h, { c, w: 2.4, d });
+    p.text(x + 18, y + 40, title, { size: 32, font: "hand", c, d: d + .1 });
+    lines.forEach((l, i) => p.text(x + 18, y + 72 + i * 25, l, { size: 17, c: "dim", d: d + .15 + i * .04 }));
+  };
+  B(10, 60, 220, 180, "chalk", "Browser", ["6 stations", "live charts", "progress bar · cancel"], .5);
+  B(320, 60, 235, 180, "yellow", "API", ["Flask web server", "POST /api/jobs", "GET /api/jobs/<id>"], .8);
+  B(645, 60, 255, 180, "orange", "Job manager", ["checks every input", "2 worker threads", "progress · cancel"], 1.1);
+  p.rect(990, 20, 430, 400, { c: "cyan", w: 2.6, d: 1.4 });
+  p.text(1012, 62, "The engine (src/)", { size: 34, font: "hand", c: "cyan", d: 1.5 });
+  const steps = ["Hartree–Fock on the right branch", "active space (6 or 8 orbitals)", "Jordan–Wigner → qubits", "Z₂ tapering: 12 → 7, 16 → 11", "ADAPT-VQE circuit", "noisy-chip simulation + fixes", "SQD: sample, recover, solve"];
+  steps.forEach((s, i) => { const y = 92 + i * 45; p.rect(1012, y, 386, 36, { c: "faint", w: 1.5, single: true, d: 1.6 + i * .08 }); p.text(1026, y + 25, `${i + 1}  ${s}`, { size: 18, c: "chalk", d: 1.65 + i * .08 }); });
+  B(645, 300, 255, 120, "green", "Result cache", ["same request → instant", "saved as JSON"], 1.9);
+  B(320, 300, 235, 120, "faint", "Published study", ["results/*.json", "reference curves"], 2.1);
+  p.arrow(234, 120, 316, 120, { c: "chalk", w: 2.4, label: "request", lc: "dim", ly: -12, d: 2.3 });
+  p.arrow(559, 120, 641, 120, { c: "yellow", w: 2.4, label: "job", lc: "dim", ly: -12, d: 2.4 });
+  p.arrow(904, 120, 986, 120, { c: "orange", w: 2.4, label: "run", lc: "dim", ly: -12, d: 2.5 });
+  p.arrow(986, 200, 904, 200, { c: "cyan", w: 2.2, label: "progress", lc: "cyan", ly: 22, d: 2.6 });
+  p.arrow(316, 200, 234, 200, { c: "yellow", w: 2.2, label: "updates", lc: "yellow", ly: 22, d: 2.7, dash: "6 6" });
+  p.arrow(772, 242, 772, 296, { c: "green", w: 2.2, d: 2.8 });
+  p.arrow(437, 296, 437, 242, { c: "faint", w: 2, d: 2.9 });
+}
+
+function w3() {
+  const p = new Pad("trace", { base: .45, step: .05 });
+  p.ink("M46 20C58 120 34 220 46 320S58 480 46 580", { c: "pink", w: 3, dur: 1.6 });
+  const steps = [
+    ["You click", "POST /api/jobs  {type: energies, r: 2.1, space: fv108}", "chalk"],
+    ["Hartree–Fock walks out", "1.098 → 1.20 → 1.35 → 1.50 → 1.70 → 1.90 → 2.10 Å, staying on the symmetric solution", "orange"],
+    ["Zoom + translate + shrink", "10 electrons in 8 orbitals → 16 qubits → symmetry removes 5 → 11 qubits, 815 Pauli terms", "cyan"],
+    ["Exact answer + gold standard", "exact singlet from 3,136 arrangements · CCSD(T) with DIIS", "yellow"],
+    ["Charts fill in", "CCSD(T) −144 mHa: collapsed below the exact energy · best arrangement holds only 19%", "pink"],
+    ["Saved", "result cached by its inputs: the next identical click answers instantly", "green"],
+  ];
+  steps.forEach(([t, s, c], i) => {
+    const y = 34 + i * 96;
+    p.dot(46, y, 10, { c, glow: true, d: .7 + i * .22 });
+    p.text(78, y + 9, t, { size: 31, font: "hand", c, d: .75 + i * .22 });
+    wrapText(p, 78, y + 38, s, 820, { size: 18, c: "dim", d: .85 + i * .22 });
+  });
+}
+
+function w5() {
+  const p = new Pad("checks5", { base: .5, step: .12 });
+  const items = [["Integrals + Hartree–Fock", "water and N₂ against textbook values, to 3 × 10⁻¹³ Ha · 4 checks"], ["Coupled cluster + qubit Hamiltonian", "Crawford references to 10⁻¹⁰ Ha, exact energies · 4 checks"], ["Tapering + ADAPT-VQE", "12- and 7-qubit runs agree to 10⁻⁹ Ha · 8 checks"], ["Web API", "same energies, circuits and noise as the published study · 19 checks"], ["Browser engine", "offline lab matches the Python engine · 52 checks"], ["All 87 checks pass", "run them from the Proof tab with one click"]];
+  items.forEach(([a, b], i) => {
+    const y = 14 + i * 74;
+    p.rect(8, y, 32, 32, { c: "chalk", w: 2, single: true });
+    p.ink(`M13 ${y + 16}L23 ${y + 28}L46 ${y - 6}`, { c: "green", w: 3.4 });
+    p.text(64, y + 20, a, { size: 27, font: "hand", c: i === 5 ? "green" : "chalk" });
+    p.text(64, y + 46, b, { size: 17, c: "faint" });
+  });
+}
+
+function build() {
+  R = mkRng(42);
+  sketchBoxes();
+  [w1, w2, w3, w5].forEach(f => { try { f(); } catch (err) { console.error(f.name, err); } });
+  dust();
+  const m = /^#s(\d+)$/.exec(location.hash);
+  go(m ? +m[1] - 1 : 0);
+}
+let built = false;
+const once = () => { if (!built) { built = true; build(); } };
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(once);
+setTimeout(once, 2500);
+function overlayFor(container) {
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "overlay d");
+  svg.setAttribute("width", container.offsetWidth); svg.setAttribute("height", container.offsetHeight);
+  svg.setAttribute("viewBox", `0 0 ${container.offsetWidth} ${container.offsetHeight}`); container.appendChild(svg); return svg;
+}
+const box = el => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+
+function wrapText(p, x, y, s, maxW, o) {
+  const words = s.split(" "), lines = []; let cur = "";
+  const per = (o.size || 17) * .48;
+  words.forEach(w => { if ((cur + " " + w).trim().length * per > maxW) { lines.push(cur.trim()); cur = w; } else cur += " " + w; });
+  if (cur.trim()) lines.push(cur.trim());
+  lines.forEach((l, i) => p.text(x, y + i * (o.size + 6), l, o));
+}
+
+/* sketched borders around HTML boxes */
+function sketchBoxes() {
+  document.querySelectorAll("[data-sk]").forEach((el, i) => {
+    const w = el.offsetWidth, h = el.offsetHeight, svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "skb"); svg.setAttribute("width", w + 12); svg.setAttribute("height", h + 12); svg.setAttribute("viewBox", `0 0 ${w + 12} ${h + 12}`);
+    el.prepend(svg);
+    const p = new Pad(svg, { base: .35 + (i % 4) * .08 });
+    p.rect(6, 6, w, h, { c: el.dataset.sk, w: 2.2, j: 1.4, o: .9 });
+  });
+}
+
+/* blackboard dust + ghost equations */
+function dust() {
+  const cv = document.getElementById("dust"), ctx = cv.getContext("2d");
+  const g = ctx.createRadialGradient(800, 380, 100, 800, 450, 1000); g.addColorStop(0, "#1b2531"); g.addColorStop(1, "#121921");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1600, 900);
+  const r = mkRng(9);
+  for (let i = 0; i < 26; i++) { ctx.strokeStyle = `rgba(238,241,234,${.012 + r() * .02})`; ctx.lineWidth = 40 + r() * 70; ctx.lineCap = "round"; ctx.beginPath(); const x = r() * 1600, y = r() * 900; ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 150 - r() * 300, y + 60 - r() * 120, x + 200 - r() * 400, y + 40 - r() * 80); ctx.stroke(); }
+  const img = ctx.getImageData(0, 0, 1600, 900), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (r() - .5) * 10; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+  const eqs = ["Ĥ|ψ⟩ = E|ψ⟩", "E(θ) ≥ E₀", "a†ₚ aq", "⟨ψ|H|ψ⟩", "2ⁿ", "e^(−iθP/2)", "[H, A]", "|0⟩ |1⟩", "ΔG", "1 kcal/mol", "σ π π*", "Z₂"];
+  ctx.fillStyle = "rgba(238,241,234,.045)";
+  eqs.forEach((e, i) => { ctx.save(); ctx.translate(80 + r() * 1440, 60 + r() * 760); ctx.rotate((r() - .5) * .25); ctx.font = `700 ${34 + r() * 30}px Caveat, "Comic Sans MS", cursive`; ctx.fillText(e, 0, 0); ctx.restore(); });
+}
+
+/* element tile */
+function tile(n, sym, name) {
+  document.getElementById("tz").textContent = n; document.getElementById("ts").textContent = sym; document.getElementById("tn").textContent = name;
+  const svg = document.getElementById("bohr"); svg.innerHTML = "";
+  const shells = [Math.min(n, 2), Math.min(Math.max(n - 2, 0), 8), Math.max(n - 10, 0)].filter(k => k > 0);
+  const nuc = document.createElementNS(NS, "circle"); nuc.setAttribute("r", 4.5); nuc.style.fill = HEX.pink; svg.appendChild(nuc);
+  shells.forEach((k, i) => {
+    const r = 12 + i * 10;
+    const c = document.createElementNS(NS, "circle"); c.setAttribute("r", r); c.style.fill = "none"; c.style.stroke = "#7d8a99"; c.style.strokeWidth = 1.2; svg.appendChild(c);
+    const g = document.createElementNS(NS, "g"); spinG(g, 5 + i * 3);
+    for (let j = 0; j < k; j++) { const a = j / k * Math.PI * 2, e = document.createElementNS(NS, "circle"); e.setAttribute("cx", (Math.cos(a) * r).toFixed(2)); e.setAttribute("cy", (Math.sin(a) * r).toFixed(2)); e.setAttribute("r", 2.6); e.style.fill = HEX.cyan; g.appendChild(e); }
+    svg.appendChild(g);
+  });
+}
+
+/* ---------- atom-burst transition ---------- */
+const slides = [...document.querySelectorAll(".slide")];
+const fx = document.getElementById("fx"), fctx = fx.getContext("2d");
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+fx.width = 1600 * DPR; fx.height = 900 * DPR; fctx.scale(DPR, DPR);
+let cur = -1, busy = false, queued = null;
+const easeOutBack = t => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const easeIn = t => t * t * t;
+const clamp = v => Math.max(0, Math.min(1, v));
+
+function go(n) {
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (n === cur) return;
+  if (busy) { queued = n; return; }
+  if (cur < 0 || REDUCE) { swap(n); return; }
+  burst(n);
+}
+function swap(n) {
+  if (cur >= 0) slides[cur].classList.remove("on", "dim");
+  cur = n; slides[n].classList.add("on"); chrome();
+}
+function chrome() {
+  const s = slides[cur];
+  [...document.getElementById("dots").children].forEach((d, i) => d.setAttribute("aria-current", i === cur ? "true" : "false"));
+  tile(+s.dataset.el, s.dataset.sym, s.dataset.name);
+  document.getElementById("help").textContent = String(cur + 1).padStart(2, "0") + " / " + slides.length + " · " + s.dataset.tag;
+  document.getElementById("notes-h").textContent = "Slide " + (cur + 1) + " · " + s.dataset.tag;
+  document.getElementById("notes-b").textContent = NOTES[cur] || "";
+  try { history.replaceState(null, "", "#s" + (cur + 1)); } catch (e) {}
+}
+function burst(n) {
+  busy = true;
+  const from = slides[cur], to = slides[n], k = +to.dataset.el, dir = n > cur ? 1 : -1;
+  from.classList.add("dim"); from.style.zIndex = 1; to.style.zIndex = 3;
+  to.style.clipPath = "circle(0px at 50% 50%)";
+  const T = 1450, t0 = performance.now(), cx = 800, cy = 450, RX = 215, RY = 76;
+  const rings = [0, 60, 120].map(d => d * Math.PI / 180);
+  const es = Array.from({ length: k }, (_, j) => ({ ring: j % 3, a: j / k * Math.PI * 2 + (j % 3) * .7, trail: [], free: null }));
+  const nuc = Array.from({ length: 14 }, (_, j) => ({ a: R() * 6.28, r: 5 + R() * 18, p: j % 2 }));
+  let revealed = false, last = t0;
+  function pos(e, S) { const th = rings[e.ring]; const x = Math.cos(e.a) * RX * S, y = Math.sin(e.a) * RY * S; return [cx + x * Math.cos(th) - y * Math.sin(th), cy + x * Math.sin(th) + y * Math.cos(th)]; }
+  function frame(now) {
+    const p = clamp((now - t0) / T), dt = Math.min((now - last) / 1000, .05); last = now;
+    const a = clamp(p / .3), grow = easeOutBack(a), q = clamp((p - .56) / .44), b = easeIn(q);
+    const S = Math.max(grow, 0) * (1 + b * 8.5);
+    fctx.clearRect(0, 0, 1600, 900);
+    const ringA = Math.min(1, a * 1.6) * (1 - q * q);
+    fctx.lineCap = "round";
+    rings.forEach((th, i) => {
+      for (let pass = 0; pass < 2; pass++) {
+        fctx.save(); fctx.translate(cx + (pass ? 1.5 : 0), cy + (pass ? -1 : 0)); fctx.rotate(th + (pass ? .01 : 0));
+        fctx.strokeStyle = `rgba(238,241,234,${(pass ? .35 : .85) * ringA})`; fctx.lineWidth = (pass ? 1.5 : 3) * (1 + b * 2);
+        fctx.beginPath(); fctx.ellipse(0, 0, Math.max(RX * S, .1), Math.max(RY * S, .1), 0, 0, Math.PI * 2); fctx.stroke(); fctx.restore();
+      }
+    });
+    if (q < 1) {
+      nuc.forEach(o => { fctx.beginPath(); fctx.fillStyle = o.p ? `rgba(255,147,186,${(1 - q) * Math.min(1, a * 2)})` : `rgba(238,241,234,${.85 * (1 - q) * Math.min(1, a * 2)})`; fctx.arc(cx + Math.cos(o.a + p * 3) * o.r * grow, cy + Math.sin(o.a + p * 3) * o.r * grow, 7 * Math.max(grow, 0), 0, 7); fctx.fill(); });
+    }
+    if (q > 0 && q < .35) {
+      fctx.strokeStyle = `rgba(255,217,119,${(1 - q / .35) * .9})`; fctx.lineWidth = 3;
+      for (let i = 0; i < 12; i++) { const ang = i / 12 * 6.283 + .2, r0 = 40 + q * 300, r1 = r0 + 40 + q * 200; fctx.beginPath(); fctx.moveTo(cx + Math.cos(ang) * r0, cy + Math.sin(ang) * r0); fctx.lineTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1); fctx.stroke(); }
+    }
+    const omega = (3 + 12 * clamp((p - .1) / .46)) * dir;
+    es.forEach(e => {
+      let x, y;
+      if (q <= 0) { e.a += omega * dt; [x, y] = pos(e, Math.max(grow, .01)); }
+      else {
+        if (!e.free) { const [x0, y0] = pos(e, 1); const [x1, y1] = pos({ ...e, a: e.a + .02 * dir }, 1); const L = Math.hypot(x1 - x0, y1 - y0) || 1; e.free = { x: x0, y: y0, vx: (x1 - x0) / L, vy: (y1 - y0) / L }; }
+        const tau = q * T * .44 / 1000, dist = 700 * tau + 5200 * tau * tau;
+        x = e.free.x + e.free.vx * dist; y = e.free.y + e.free.vy * dist;
+      }
+      e.trail.push([x, y]); if (e.trail.length > 16) e.trail.shift();
+      for (let i = 1; i < e.trail.length; i++) { fctx.strokeStyle = `rgba(127,221,228,${i / e.trail.length * .6})`; fctx.lineWidth = i / e.trail.length * 6; fctx.beginPath(); fctx.moveTo(e.trail[i - 1][0], e.trail[i - 1][1]); fctx.lineTo(e.trail[i][0], e.trail[i][1]); fctx.stroke(); }
+      fctx.save(); fctx.shadowColor = "#7fdde4"; fctx.shadowBlur = 16; fctx.fillStyle = "#e9fdff"; fctx.beginPath(); fctx.arc(x, y, 6.5, 0, 7); fctx.fill(); fctx.restore();
+    });
+    if (q > 0) {
+      if (!revealed) { revealed = true; to.classList.add("on"); }
+      to.style.clipPath = `circle(${(RX * S * .98).toFixed(1)}px at 50% 50%)`;
+      from.style.opacity = String(1 - q);
+    }
+    if (p < 1) requestAnimationFrame(frame);
+    else {
+      fctx.clearRect(0, 0, 1600, 900);
+      to.style.clipPath = ""; to.style.zIndex = ""; from.style.zIndex = ""; from.classList.remove("on", "dim"); from.style.opacity = "";
+      cur = n; chrome(); busy = false;
+      if (queued !== null) { const qn = queued; queued = null; go(qn); }
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- controls ---------- */
+const dots = document.getElementById("dots");
+slides.forEach((s, i) => { const b = document.createElement("button"); b.setAttribute("role", "tab"); b.setAttribute("aria-label", `Slide ${i + 1}: ${s.dataset.tag}`); b.addEventListener("click", () => go(i)); dots.appendChild(b); });
+document.getElementById("prev").addEventListener("click", () => go((busy && queued !== null ? queued : cur) - 1));
+document.getElementById("next").addEventListener("click", () => go((busy && queued !== null ? queued : cur) + 1));
+const notes = document.getElementById("notes");
+document.getElementById("nbtn").addEventListener("click", () => { notes.hidden = !notes.hidden; });
+addEventListener("keydown", e => {
+  const base = busy && queued !== null ? queued : cur;
+  if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(base + 1); }
+  else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(base - 1); }
+  else if (e.key === "Home") go(0); else if (e.key === "End") go(slides.length - 1);
+  else if (e.key === "n" || e.key === "N") notes.hidden = !notes.hidden;
+  else if (e.key === "f" || e.key === "F") { const r = document.documentElement; try { const pr = document.fullscreenElement ? document.exitFullscreen() : r.requestFullscreen && r.requestFullscreen(); pr && pr.catch && pr.catch(() => {}); } catch (err) {} }
+});
+let tx = null, ty = null;
+addEventListener("touchstart", e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+addEventListener("touchend", e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1)); tx = null; }, { passive: true });
+document.getElementById("stage").addEventListener("click", e => {
+  if (e.target.closest("button,.term,#notes,#chrome")) return;
+  const r = e.currentTarget.getBoundingClientRect(); go(cur + ((e.clientX - r.left) > r.width * .3 ? 1 : -1));
+});
+function fit() {
+  const vv = window.visualViewport, w = vv ? vv.width : innerWidth, h = vv ? vv.height : innerHeight;
+  const k = Math.max(.05, Math.min((w - 32) / 1624, (h - 32) / 924));
+  document.getElementById("stage").style.transform = `translate(-50%, -50%) scale(${k})`;
+}
+addEventListener("resize", fit); addEventListener("orientationchange", fit);
+if (window.visualViewport) visualViewport.addEventListener("resize", fit);
+fit();
+
+</script>
+</body>
+</html>

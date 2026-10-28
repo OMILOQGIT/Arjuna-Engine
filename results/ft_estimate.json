@@ -1,0 +1,44 @@
+{
+ "assumptions": [
+  "Revised after expert-panel review. Assumptions (all stated, deliberately simple):",
+  "  * On error-corrected (logical) qubits we use NO zero-noise extrapolation; only the noise-induced part of",
+  "    the error must fit in the budget left after the ansatz's own (noise-free) error:",
+  "        budget = 1.6 mHa - |E_circuit(noise-free) - E_exact|",
+  "  * Noise-induced error is linear in the gate error at small error (checked on the sweep):",
+  "        slope = (|E_REM(r2_min) - E_exact| - ansatz_err) / r2_min   with r1 = r2/12 as in the sweep",
+  "    -> required logical two-qubit error  r2_L = budget / slope",
+  "  * Surface code: per-round, per-patch logical error p_L(d) = 0.1 (p/p_th)^((d+1)/2), p = 1e-3, p_th = 1e-2.",
+  "    A lattice-surgery CNOT takes ~d rounds on ~3 patches -> per-gate logical error  3 d p_L(d).",
+  "  * Footprint: 2 d^2 physical qubits per logical patch x 2 for routing space. Magic-state (T) factories are",
+  "    EXCLUDED and usually dominate the footprint. Circuit CNOT counts are upper bounds (naive ladders).",
+  "  * T gates: each Rz synthesised to eps_rot = 1e-4 rad with ~3 log2(1/eps) T gates (Ross-Selinger).",
+  "  * Even fault tolerant, VQE still needs ~1e5-1e6 shots per Pauli term; the standard fault-tolerant route",
+  "    for chemistry is quantum phase estimation (qubitization), not estimated here."
+ ],
+ "1.098": {
+  "logical_qubits": 7,
+  "cx": 1048,
+  "rz": 172,
+  "ansatz_err_mHa": 0.45996273162529633,
+  "budget_mHa": 1.1400372683747038,
+  "noise_slope_mHa_per_unit_r2": 2927138.8434892744,
+  "r2_logical_target": 3.894715383626049e-07,
+  "code_distance": 15,
+  "physical_qubits_data_and_routing": 6300,
+  "t_gates": 6880,
+  "note": "factories excluded; CNOT counts are upper bounds; VQE shot cost not included"
+ },
+ "2.1": {
+  "logical_qubits": 7,
+  "cx": 1792,
+  "rz": 264,
+  "ansatz_err_mHa": 0.7843612943077005,
+  "budget_mHa": 0.8156387056922996,
+  "noise_slope_mHa_per_unit_r2": 2646958.329719951,
+  "r2_logical_target": 3.0814187610524054e-07,
+  "code_distance": 15,
+  "physical_qubits_data_and_routing": 6300,
+  "t_gates": 10560,
+  "note": "factories excluded; CNOT counts are upper bounds; VQE shot cost not included"
+ }
+}

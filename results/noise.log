@@ -1,0 +1,35 @@
+
+R=1.098: 7 qubits, ADAPT ops to chem.acc k=23, gates {'cx': 1048, '1q': 964}; noiseless circuit err 0.4600 mHa (matches statevector)
+   raw            err  +2547.889 mHa
+   rem            err  +2537.242 mHa
+   rem+zne_lin    err  +2393.757 mHa
+   rem+zne_rich   err  +2296.025 mHa
+   rem+zne_exp    err  +1810.423 mHa
+   rem+zne_exp_asym err  +1966.364 mHa
+   PEC sampling overhead gamma=5.351e+03 -> ~4.90e+13 shots/term for the remaining budget (vs 1.71e+06 unmitigated)
+   r2=1e-06: raw  +248.971  rem    +3.387  zne_rich    +0.460  zne_exp    +0.460 mHa  PEC gamma 1.00e+00
+   r2=3e-06: raw  +254.171  rem    +9.231  zne_rich    +0.460  zne_exp    +0.460 mHa  PEC gamma 1.01e+00
+   r2=1e-05: raw  +272.272  rem   +29.571  zne_rich    +0.471  zne_exp    +0.461 mHa  PEC gamma 1.03e+00
+   r2=3e-05: raw  +323.159  rem   +86.739  zne_rich    +0.751  zne_exp    +0.484 mHa  PEC gamma 1.09e+00
+   r2=1e-04: raw  +491.981  rem  +276.222  zne_rich    +9.221  zne_exp    +1.344 mHa  PEC gamma 1.33e+00
+   r2=3e-04: raw  +903.959  rem  +737.343  zne_rich  +136.380  zne_exp   +24.302 mHa  PEC gamma 2.36e+00
+   r2=1e-03: raw +1788.621  rem +1718.325  zne_rich +1072.057  zne_exp  +556.089 mHa  PEC gamma 1.75e+01
+   r2=3e-03: raw +2547.889  rem +2537.242  zne_rich +2296.025  zne_exp +1810.423 mHa  PEC gamma 5.35e+03
+
+R=2.1: 7 qubits, ADAPT ops to chem.acc k=36, gates {'cx': 1792, '1q': 1480}; noiseless circuit err 0.7844 mHa (matches statevector)
+   raw            err  +1291.396 mHa
+   rem            err  +1289.889 mHa
+   rem+zne_lin    err  +1280.818 mHa
+   rem+zne_rich   err  +1274.099 mHa
+   rem+zne_exp    err  +1142.720 mHa
+   rem+zne_exp_asym err  +1193.661 mHa
+   PEC sampling overhead gamma=2.092e+06 -> ~8.58e+18 shots/term for the remaining budget (vs 1.96e+06 unmitigated)
+   r2=1e-06: raw  +179.830  rem    +3.431  zne_rich    +0.784  zne_exp    +0.784 mHa  PEC gamma 1.00e+00
+   r2=3e-06: raw  +184.344  rem    +8.708  zne_rich    +0.785  zne_exp    +0.784 mHa  PEC gamma 1.01e+00
+   r2=1e-05: raw  +199.988  rem   +26.993  zne_rich    +0.817  zne_exp    +0.786 mHa  PEC gamma 1.05e+00
+   r2=3e-05: raw  +243.387  rem   +77.708  zne_rich    +1.566  zne_exp    +0.827 mHa  PEC gamma 1.16e+00
+   r2=1e-04: raw  +381.202  rem  +238.649  zne_rich   +21.099  zne_exp    +2.362 mHa  PEC gamma 1.62e+00
+   r2=3e-04: raw  +677.513  rem  +583.965  zne_rich  +224.333  zne_exp   +39.464 mHa  PEC gamma 4.28e+00
+   r2=1e-03: raw +1119.971  rem +1095.912  zne_rich  +931.869  zne_exp  +550.700 mHa  PEC gamma 1.28e+02
+   r2=3e-03: raw +1291.396  rem +1289.889  zne_rich +1274.099  zne_exp +1142.720 mHa  PEC gamma 2.09e+06
+saved results/noise.json

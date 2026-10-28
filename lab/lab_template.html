@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arjuna Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab notebook on a blackboard. Header with live self-test badge, five stations along the pipeline
+   (explore → build → stress → rescue → prove), each = plain-words line, controls, live numbers, charts.
+   Deliberately single-theme (blackboard), matching the Team Arjuna deck. */
+:root {
+  --board: #141c26;       /* page */
+  --panel: #1a2430;       /* cards */
+  --panel-2: #212d3b;     /* inputs, raised */
+  --line: #2e3c4d;        /* hairlines */
+  --chalk: #eef1ea;       /* text */
+  --dim: #b9c3cf;         /* secondary text */
+  --faint: #7f8c9b;       /* tertiary */
+  --cyan: #7fdde4;        /* quantum / ADAPT */
+  --pink: #ff93ba;        /* highlights, electrons */
+  --yellow: #ffd977;      /* plain words */
+  --orange: #ffb067;      /* classical, noise */
+  --green: #9fe7a4;       /* verified, SQD, within target */
+  --red: #ff7b7b;         /* failure state */
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--board); color: var(--chalk); font: 400 16px/1.5 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 40px;
+  background-image: radial-gradient(1200px 600px at 80% -10%, rgba(127,221,228,.06), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgba(255,147,186,.05), transparent 60%);
+  min-height: 100vh;
+}
+.wrap { max-width: 1280px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 24px; padding: 22px 0 14px; border-bottom: 1px dashed var(--line); }
+.brand h1 { margin: 0; font: 700 52px/0.95 var(--hand); letter-spacing: .01em; }
+.brand h1 span { color: var(--cyan); }
+.brand p { margin: 6px 0 0; color: var(--dim); font-size: 15px; }
+.badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font: 500 14px var(--mono); color: var(--dim); cursor: pointer; }
+.badge .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
+.badge.ok .dot { background: var(--green); box-shadow: 0 0 10px var(--green); }
+.badge.bad .dot { background: var(--red); box-shadow: 0 0 10px var(--red); }
+nav.tabs { display: flex; gap: 6px; margin: 16px 0 18px; overflow-x: auto; padding-bottom: 4px; }
+nav.tabs button { flex: none; background: transparent; color: var(--dim); border: 1px solid var(--line); border-radius: 12px 14px 11px 13px; padding: 8px 14px; font: 600 15px var(--sans); cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+nav.tabs button b { font: 700 22px/1 var(--hand); color: var(--pink); }
+nav.tabs button[aria-selected="true"] { background: var(--panel-2); color: var(--chalk); border-color: var(--cyan); }
+nav.tabs button:hover { border-color: var(--faint); }
+section.station[hidden] { display: none !important; }
+.intro { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; margin-bottom: 14px; }
+.intro h2 { margin: 0; font: 700 40px/1 var(--hand); }
+.intro p { margin: 0; color: var(--yellow); font-size: 16.5px; max-width: 780px; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.card h3 { margin: 0 0 10px; font: 600 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); display: flex; justify-content: space-between; gap: 10px; }
+.span-12 { grid-column: span 12; } .span-8 { grid-column: span 8; } .span-7 { grid-column: span 7; } .span-6 { grid-column: span 6; } .span-5 { grid-column: span 5; } .span-4 { grid-column: span 4; } .span-3 { grid-column: span 3; }
+@media (max-width: 920px) { .span-8, .span-7, .span-6, .span-5, .span-4 { grid-column: span 12; } .span-3 { grid-column: span 6; } }
+@media (max-width: 520px) { .span-3 { grid-column: span 12; } .brand h1 { font-size: 42px; } .intro h2 { font-size: 34px; } }
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: flex-end; }
+.ctl { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ctl label { font: 500 12.5px var(--mono); color: var(--faint); letter-spacing: .04em; text-transform: uppercase; }
+.ctl output { font: 500 15px var(--mono); color: var(--chalk); }
+input[type=range] { width: 260px; max-width: 100%; accent-color: var(--cyan); }
+select, .btn { background: var(--panel-2); color: var(--chalk); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font: 500 14px var(--sans); }
+.btn { cursor: pointer; }
+.btn.primary { border-color: var(--cyan); color: var(--cyan); }
+.btn:hover { border-color: var(--faint); }
+.btn:disabled { opacity: .5; cursor: progress; }
+button:focus-visible, select:focus-visible, input:focus-visible, .badge:focus-visible { outline: 2px dashed var(--yellow); outline-offset: 3px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.seg button { background: var(--panel-2); color: var(--dim); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font: 500 13px var(--mono); cursor: pointer; font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { border-color: var(--cyan); color: var(--board); background: var(--cyan); }
+.kpi { display: flex; flex-direction: column; gap: 4px; }
+.kpi .v { font: 700 40px/1 var(--hand); font-variant-numeric: tabular-nums; }
+.kpi .v small { font: 500 15px var(--mono); color: var(--faint); margin-left: 6px; }
+.kpi .k { font-size: 14px; color: var(--dim); line-height: 1.35; }
+.pill { display: inline-block; font: 500 12px var(--mono); padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; vertical-align: middle; }
+.ok { color: var(--green); } .warn { color: var(--orange); } .fail { color: var(--red); } .q { color: var(--cyan); } .hl { color: var(--pink); }
+.note { font-size: 14px; color: var(--dim); line-height: 1.5; }
+.note b { color: var(--chalk); font-weight: 500; }
+.plain { border-left: 3px solid var(--yellow); padding: 4px 0 4px 12px; color: var(--chalk); font-size: 15px; }
+svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+svg.chart text { font: 12px var(--mono); fill: var(--faint); }
+svg.chart .t-lbl { font: 600 13px var(--sans); }
+svg.chart .grid line { stroke: var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 12.5px var(--mono); color: var(--dim); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 16px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.t th { text-align: left; font: 500 12px var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
+table.t td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroll-x { overflow-x: auto; }
+.bricklist { max-height: 300px; overflow: auto; }
+.bricklist tr.new td { color: var(--cyan); }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--cyan); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress { height: 4px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--pink)); transition: width .2s; }
+.verdict { font: 700 28px/1.1 var(--hand); }
+.det { display: inline-grid; grid-template-columns: repeat(6, 9px); gap: 2px; vertical-align: middle; margin-right: 8px; }
+.det span { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--faint); }
+.det span.on { background: var(--cyan); border-color: var(--cyan); }
+.det span.onb { background: var(--pink); border-color: var(--pink); }
+.check { display: grid; grid-template-columns: 26px 1fr auto; gap: 6px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.check .s { font: 700 18px var(--mono); }
+.check .d { font: 12.5px var(--mono); color: var(--faint); text-align: right; }
+body.big { font-size: 18px; }
+body.big svg.chart text { font-size: 15px; } body.big svg.chart .t-lbl { font-size: 15.5px; }
+body.big .kpi .v { font-size: 50px; } body.big .kpi .k, body.big .note, body.big table.t { font-size: 16.5px; }
+body.big .intro p { font-size: 19px; } body.big .legend { font-size: 14.5px; }
+.seg button, .btn, nav.tabs button { min-height: 36px; }
+svg.chart text { fill: var(--dim); }
+footer { margin-top: 28px; color: var(--faint); font-size: 13px; border-top: 1px dashed var(--line); padding-top: 12px; }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } .progress > div { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <h1>Arjuna <span>Lab</span></h1>
+    <p>Live N≡N quantum-chemistry engine · Team Arjuna · QC-02 · Chakravyuh hackathon</p>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="btn" id="bigtext" type="button" aria-pressed="false">Large text</button>
+    <button class="badge" id="badge" type="button" aria-label="Engine self-test status"><span class="dot"></span><span id="badge-t">Self-test starting…</span></button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Lab stations">
+  <button role="tab" id="tab-explore" aria-controls="explore" aria-selected="true"><b>1</b>Bond explorer</button>
+  <button role="tab" id="tab-build" aria-controls="build" aria-selected="false"><b>2</b>Circuit builder</button>
+  <button role="tab" id="tab-noise" aria-controls="noise" aria-selected="false"><b>3</b>Noise lab</button>
+  <button role="tab" id="tab-sqd" aria-controls="sqd" aria-selected="false"><b>4</b>SQD rescue</button>
+  <button role="tab" id="tab-proof" aria-controls="proof" aria-selected="false"><b>5</b>Proof</button>
+</nav>
+
+<!-- 1 BOND EXPLORER -->
+<section class="station" id="explore" role="tabpanel" aria-labelledby="tab-explore">
+  <div class="intro"><h2>Bond explorer</h2><p>Pull the two nitrogen atoms apart. Coupled cluster, chemistry's "gold standard", drifts off target and then collapses below the true energy. ADAPT-VQE stays on target.</p></div>
+  <div class="grid">
+    <div class="card span-12"><div class="controls">
+      <div class="ctl"><label>Active space</label><div class="seg" id="ex-space" role="group" aria-label="Active space"><button type="button" data-s="fv" aria-pressed="true">10 e⁻ in 8 orbitals · 11 qubits</button><button type="button" data-s="cas" aria-pressed="false">6 e⁻ in 6 orbitals · 7 qubits</button></div></div>
+      <div class="ctl" style="flex:1;min-width:260px"><label>Bond length</label><div class="seg" id="ex-seg" role="group" aria-label="Bond length"></div></div>
+    </div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="k-exact">–</span><span class="k" id="k-exact-k">Exact singlet energy in this space (hartree)</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="k-cc">–</span><span class="k" id="k-cc-k">CCSD(T) error</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="k-ad">–</span><span class="k" id="k-ad-k">ADAPT-VQE error</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="k-hf">–</span><span class="k" id="k-hf-k">Weight of the single best arrangement</span></div></div>
+    <div class="card span-7"><h3>How far off each method is (mHa, log scale) <span id="ex-rl"></span></h3>
+      <div class="legend"><span><i style="background:var(--orange)"></i>CCSD(T) above the true energy</span><span style="color:var(--red)">▼ collapsed below the true energy</span><span style="color:var(--red)">× did not converge</span><span><i style="background:var(--cyan)"></i>ADAPT-VQE</span><span><i style="background:var(--green)"></i>1.6 mHa target</span></div>
+      <svg class="chart" id="ch-err" viewBox="0 0 700 340" role="img" aria-label="Errors on a log scale"></svg></div>
+    <div class="card span-5"><h3>Energy as the bond stretches</h3>
+      <div class="legend"><span><i style="background:var(--chalk)"></i>Exact</span><span><i style="background:var(--faint)"></i>One arrangement (HF)</span><span><i style="background:var(--orange)"></i>CCSD(T)</span><span><i style="background:var(--cyan);height:9px;width:9px"></i>ADAPT</span></div>
+      <svg class="chart" id="ch-pes" viewBox="0 0 480 340" role="img" aria-label="Potential energy curves"></svg></div>
+    <div class="card span-7"><h3>Who is in the electron crowd</h3>
+      <div id="ex-crowd"></div>
+      <p class="note" style="margin-top:8px" id="ex-crowd-note"></p></div>
+    <div class="card span-5"><h3>What this means</h3><div id="ex-story" class="note"></div></div>
+  </div>
+</section>
+
+<!-- 2 CIRCUIT BUILDER -->
+<section class="station" id="build" role="tabpanel" aria-labelledby="tab-build" hidden>
+  <div class="intro"><h2>Circuit builder</h2><p>ADAPT-VQE adds one "brick" (an electron move) at a time, always the one that lowers the energy most. Slide to build the circuit; the energy is recomputed live in your browser.</p></div>
+  <div class="grid">
+    <div class="card span-12"><div class="controls">
+      <div class="ctl" style="min-width:260px;flex:1"><label>Bond length</label><div class="seg" id="bd-seg" role="group" aria-label="Bond length"></div></div>
+      <div class="ctl"><label for="bd-k">Bricks in the circuit: <output id="bd-kv">0</output></label><input type="range" id="bd-k" min="0" max="10" value="0"></div>
+      <div class="ctl" style="flex-direction:row;gap:8px"><button class="btn" id="bd-minus" type="button" aria-label="Remove one brick">−1</button><button class="btn" id="bd-plus" type="button" aria-label="Add one brick">+1</button><button class="btn primary" id="bd-play" type="button">▶ Build it</button><button class="btn" id="bd-jump" type="button">Jump to 1.6 mHa</button></div>
+    </div></div>
+    <div class="card span-3"><div class="kpi"><span class="v q" id="bd-e">–</span><span class="k">Energy measured from the circuit (hartree)</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="bd-err">–</span><span class="k" id="bd-err-k">Error vs exact</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="bd-cx">–</span><span class="k">CNOT gates (two-qubit, noisiest)</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="bd-1q">–</span><span class="k">Single-qubit gates</span></div></div>
+    <div class="card span-7"><h3>Error as bricks are added (log scale)</h3><svg class="chart" id="ch-conv" viewBox="0 0 700 300" role="img" aria-label="ADAPT convergence"></svg></div>
+    <div class="card span-5"><h3>Bricks added so far</h3><div class="bricklist"><table class="t"><thead><tr><th>#</th><th>Electron move</th><th>Angle θ</th></tr></thead><tbody id="bd-list"></tbody></table></div></div>
+    <div class="card span-12"><h3>Circuit sketch <span class="note" style="text-transform:none;letter-spacing:0">each box is one brick acting on the qubits it touches</span></h3><div class="scroll-x"><svg id="ch-circ" height="230" role="img" aria-label="Circuit sketch"></svg></div></div>
+  </div>
+</section>
+
+<!-- 3 NOISE LAB -->
+<section class="station" id="noise" role="tabpanel" aria-labelledby="tab-noise" hidden>
+  <div class="intro"><h2>Noise lab</h2><p>Real chips make mistakes. Choose how noisy the hardware is and run the circuit through an exact noise simulation, then try the standard fixes.</p></div>
+  <div class="grid">
+    <div class="card span-12"><div class="controls">
+      <div class="ctl" style="min-width:240px"><label>Bond length (7-qubit cases)</label><div class="seg" id="nz-seg" role="group" aria-label="Bond length"></div></div>
+      <div class="ctl"><label for="nz-k">Circuit depth: <output id="nz-kv"></output> bricks</label><input type="range" id="nz-k" min="1" max="10" value="5"></div>
+      <div class="ctl"><label for="nz-r2">Two-qubit gate error: <output id="nz-r2v"></output></label><input type="range" id="nz-r2" min="-6" max="-2" step="0.01" value="-2.52"></div>
+      <div class="ctl"><label for="nz-ro">Readout error: <output id="nz-rov"></output></label><input type="range" id="nz-ro" min="0" max="0.05" step="0.0025" value="0.015"></div>
+      <div class="ctl" style="flex-direction:row;gap:8px"><button class="btn" type="button" id="nz-today">Today's chips</button><button class="btn" type="button" id="nz-future">Future chips</button></div>
+    </div><div class="progress" aria-hidden="true"><div id="nz-prog"></div></div></div>
+    <div class="card span-4"><h3>Verdict <span id="nz-spin"></span></h3><div class="verdict" id="nz-verdict">–</div><p class="note" id="nz-vnote"></p></div>
+    <div class="card span-8"><h3>Error after each fix (mHa, log scale)</h3><svg class="chart" id="ch-abl" viewBox="0 0 760 270" role="img" aria-label="Mitigation results"></svg></div>
+    <div class="card span-6"><h3>How zero-noise extrapolation works</h3><svg class="chart" id="ch-zne" viewBox="0 0 600 300" role="img" aria-label="Zero-noise extrapolation"></svg>
+      <p class="note">We run the circuit at 1×, 3× and 5× the noise (by repeating each CNOT), then draw the trend back to zero noise. It only works while the signal is still visible.</p></div>
+    <div class="card span-6"><h3>What gate quality chemistry needs</h3>
+      <div class="legend"><span><i style="background:var(--faint)"></i>readout fix only</span><span><i style="background:var(--cyan)"></i>+ ZNE, 1.098 Å</span><span><i style="background:var(--pink)"></i>+ ZNE, 2.10 Å</span><span><i style="background:var(--yellow);height:9px;width:9px"></i>your setting</span></div>
+      <svg class="chart" id="ch-sweep" viewBox="0 0 600 280" role="img" aria-label="Error versus gate error"></svg></div>
+    <div class="card span-12"><h3>Numbers</h3><div class="scroll-x"><table class="t" id="nz-table"></table></div></div>
+  </div>
+</section>
+
+<!-- 4 SQD -->
+<section class="station" id="sqd" role="tabpanel" aria-labelledby="tab-sqd" hidden>
+  <div class="intro"><h2>SQD rescue</h2><p>Use the noisy chip only to find which electron arrangements matter, then solve exactly inside them on a normal computer. The fair test: with the same budget of arrangements, does the chip pick better ones than chance?</p></div>
+  <div class="grid">
+    <div class="card span-12"><div class="controls">
+      <div class="ctl"><label for="sq-sys">Problem</label><select id="sq-sys"></select></div>
+      <div class="ctl"><label for="sq-k">Circuit depth: <output id="sq-kv"></output> bricks</label><input type="range" id="sq-k" min="1" max="8" value="4"></div>
+      <div class="ctl"><label for="sq-r2">Two-qubit gate error: <output id="sq-r2v"></output></label><input type="range" id="sq-r2" min="-5" max="-1.7" step="0.01" value="-2.52"></div>
+      <div class="ctl"><label for="sq-shots">Shots</label><select id="sq-shots"><option>300</option><option>1000</option><option selected>3000</option></select></div>
+      <div class="ctl" style="flex-direction:row;gap:8px"><button class="btn primary" id="sq-run" type="button">▶ Sample &amp; solve</button><button class="btn" id="sq-repro" type="button">Reproduce slide</button></div>
+    </div><div class="progress" aria-hidden="true"><div id="sq-prog"></div></div></div>
+    <div class="card span-12"><div class="controls">
+      <div class="ctl" style="flex:1;min-width:280px"><label for="sq-budget">Budget: keep the <output id="sq-bv"></output> most frequent orbital patterns</label><input type="range" id="sq-budget" min="0" max="10" value="5" style="width:100%"></div>
+      <div class="ctl"><label>Subspace solved exactly</label><output id="sq-frac">–</output></div>
+    </div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="sq-err">–</span><span class="k">Chip-guided SQD error</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="sq-rnd">–</span><span class="k">Random picks, same budget</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="sq-cls">–</span><span class="k">Classical ranking (fewest excitations from HF), same budget</span></div></div>
+    <div class="card span-3"><div class="kpi"><span class="v" id="sq-adv">–</span><span class="k" id="sq-adv-k">Chip vs random at this budget</span></div></div>
+    <div class="card span-7"><h3>Error vs share of the space solved (mHa, log)</h3>
+      <div class="legend"><span><i style="background:var(--green)"></i>chip samples (noisy)</span><span><i style="background:var(--orange)"></i>random bitstrings</span><span><i style="background:var(--faint)"></i>classical ranking</span><span><i style="background:var(--yellow);height:9px;width:9px"></i>your budget</span></div>
+      <svg class="chart" id="ch-sq" viewBox="0 0 700 320" role="img" aria-label="SQD error versus subspace fraction"></svg></div>
+    <div class="card span-5"><h3>Read this before quoting a number</h3><div class="note" id="sq-honest">
+      <p class="plain">This toy space has only <b id="sq-space">3,136</b> arrangements. Without a budget, a few hundred random bitstrings already cover all of it and SQD becomes trivially exact.</p>
+      <p>So we compare at a fixed budget. SQD's value is choosing the right arrangements; the quantum advantage regime is spaces far too large to cover, like IBM's 58–77-qubit SQD runs.</p>
+      <p id="sq-extra"></p></div></div>
+    <div class="card span-6"><h3>Most frequent measurement results</h3><div id="sq-hist" class="note">Press “Sample &amp; solve”.</div></div>
+    <div class="card span-6"><h3>How the rescue works</h3><svg class="chart" id="ch-flow" viewBox="0 0 1200 150" role="img" aria-label="SQD flow"></svg></div>
+  </div>
+</section>
+
+<!-- 5 PROOF -->
+<section class="station" id="proof" role="tabpanel" aria-labelledby="tab-proof" hidden>
+  <div class="intro"><h2>Proof</h2><p>This page recomputes the physics live. Every check below runs in your browser and compares against the verified Python engine.</p></div>
+  <div class="grid">
+    <div class="card span-7"><h3>Live self-test <button class="btn" id="pf-run" type="button" style="font-size:12px;padding:4px 10px">Run again</button></h3><div id="pf-list"></div></div>
+    <div class="card span-5"><h3>What is simulated, honestly</h3><div class="note">
+      <p><b>Molecule:</b> N₂ in the STO-3G basis. CAS(6e,6o) active space on frozen-core Hartree–Fock orbitals; full valence (10e,8o) for the SQD demo.</p>
+      <p><b>Quantum part:</b> exact simulation of the circuits a quantum chip would run. Tapered to 7 qubits (11 for full valence).</p>
+      <p><b>Noise model:</b> depolarising errors on every gate plus readout flips, at a gate error you choose. Real chips also have crosstalk and drift.</p>
+      <p><b>Gate counts:</b> one CNOT ladder per Pauli string with all-to-all wiring, so they are upper bounds on the ansatz.</p>
+      <p><b>Known limit:</b> at 2.4 Å and 3.0 Å our orbital tracking loses one symmetry, so those points taper to 9–10 qubits instead of 7.</p>
+      <p><b>Data:</b> integrals, Hamiltonians and ADAPT circuits come from <span class="mono">scripts/export_lab.py</span>; reference values from the Python test suite.</p>
+    </div></div>
+  </div>
+</section>
+
+<footer>Arjuna Lab · Team Arjuna · every number on this page is computed by the engine embedded in it · N₂/STO-3G prototype · generated __GENERATED__</footer>
+</div>
+
+<script id="engine">
+__ENGINE__
+</script>
+<script>
+const DATA = __DATA__;
+const EXTRA = __EXTRA__;
+const E = self.QEngine;
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const CHEM = 1.6;
+const ORB = ["b1", "b2", "b3", "a1", "a2", "a3"];
+const fmtE = v => v.toFixed(6);
+const mHa = v => 1e3 * v;
+const fmtErr = (v, digits) => { const a = Math.abs(v); return (a >= 1000 ? a.toLocaleString("en-US", { maximumFractionDigits: 0 }) : a >= 100 ? a.toFixed(0) : a >= 10 ? a.toFixed(1) : a.toFixed(digits ?? 2)); };
+const cls = v => (Math.abs(v) <= CHEM ? "ok" : Math.abs(v) <= 10 * CHEM ? "warn" : "fail");
+const sup = n => String(n).replace(/-/g, "⁻").replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+const sci = v => { if (v === 0) return "0"; const e = Math.floor(Math.log10(v)), m = v / 10 ** e; return (Math.abs(m - 1) < 1e-9 ? "" : m.toFixed(1) + " × ") + "10" + sup(e); };
+
+/* ---------------- worker: heavy simulations off the main thread ---------------- */
+const HANDLER_SRC = `
+function HANDLE(type, p, prog) {
+  const E = self.QEngine;
+  if (type === "noise") {
+    const gates = E.rotationGates(E.adaptRotations(p.adapt, p.k), p.n);
+    prog(.05); const r = E.noiseExperiment(gates, p.n, p.ref, p.H, p.noise);
+    return Object.assign(r, { gates: E.countGates(gates) });
+  }
+  if (type === "sqd") {
+    const gates = E.rotationGates(E.adaptRotations(p.adapt, p.k), p.n);
+    const samples = E.sampleNoisy(gates, p.n, p.ref, p.noise, p.shots, { seed: p.seed, onProgress: f => prog(.6 * f) });
+    const full = Array.from(samples, b => E.untaper(p.taper, b));
+    const rnd = Array.from(E.randomTapered(p.n, p.shots, p.seed + 7919), b => E.untaper(p.taper, b));
+    const chip = E.rankStrings(p.prob, full), rand = E.rankStrings(p.prob, rnd), cls = E.hfRanked(p.prob);
+    const curve = [];
+    p.Ks.forEach((K, i) => {
+      const row = { K, dets: K * K };
+      row.chip = K <= chip.length ? E.cappedEnergy(p.prob, chip, K).energy : null;
+      row.random = K <= rand.length ? E.cappedEnergy(p.prob, rand, K).energy : null;
+      row.classical = E.cappedEnergy(p.prob, cls, K).energy;
+      curve.push(row); prog(.6 + .38 * (i + 1) / p.Ks.length);
+    });
+    const counts = {}; for (const b of full) counts[b] = (counts[b] || 0) + 1;
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([b, c]) => [+b, c]);
+    const good = full.filter(v => { const m = (1 << p.prob.n_orb) - 1; return E.popcount(v & m) === p.prob.n_alpha && E.popcount((v >>> p.prob.n_orb) & m) === p.prob.n_beta; }).length / full.length;
+    return { curve, top, cx: E.countGates(gates).cx, nChip: chip.length, nRand: rand.length, good };
+  }
+  if (type === "selftest-noise") {
+    return p.checks.map((c, i) => { const gates = E.rotationGates(E.adaptRotations(c.adapt, c.k), c.n); const r = E.noiseExperiment(gates, c.n, c.ref, c.H, c.noise); prog((i + 1) / p.checks.length); return Math.max(...["raw", "rem", "zne_lin", "zne_rich"].map(k => Math.abs(r[k] - c.ref_vals[k]))); });
+  }
+  throw new Error("unknown job " + type);
+}`;
+const WORKER_SRC = $("engine").textContent + HANDLER_SRC + `
+self.onmessage = e => { const { id, type, p } = e.data; try { const result = HANDLE(type, p, f => self.postMessage({ id, progress: f })); self.postMessage({ id, result }); } catch (err) { self.postMessage({ id, error: String(err && err.message || err) }); } };`;
+const LOCAL_HANDLE = new Function(HANDLER_SRC + "; return HANDLE;")();
+const pending = {}; let jobId = 0;
+function makeWorker() {
+  try {
+    const w = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: "text/javascript" })));
+    w.onmessage = e => { const { id, progress, result, error } = e.data, h = pending[id]; if (!h) return; if (progress !== undefined) { h.onProgress && h.onProgress(progress); return; } delete pending[id]; error ? h.reject(new Error(error)) : h.resolve(result); };
+    w.onerror = () => { w.dead = true; Object.entries(pending).forEach(([id, h]) => { if (h.w === w) h.retry(); }); };
+    return w;
+  } catch (e) { return null; }
+}
+const workers = { ui: makeWorker(), test: makeWorker() };
+function runLocal(type, p, onProgress) { return new Promise((res, rej) => setTimeout(() => { try { res(LOCAL_HANDLE(type, p, f => onProgress && onProgress(f))); } catch (err) { rej(err); } }, 30)); }
+function runJob(type, p, onProgress, which) {
+  const w = workers[which || "ui"];
+  if (!w || w.dead) return runLocal(type, p, onProgress);
+  return new Promise((resolve, reject) => { const id = ++jobId; pending[id] = { w, resolve, reject, onProgress, retry: () => { delete pending[id]; runLocal(type, p, onProgress).then(resolve, reject); } }; w.postMessage({ id, type, p }); });
+}
+
+/* ---------------- tiny SVG chart kit ---------------- */
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
+const lg = (d0, d1, r0, r1) => { const a = Math.log10(d0), b = Math.log10(d1); return v => r0 + (Math.log10(Math.max(v, d0 * 1e-3)) - a) / (b - a) * (r1 - r0); };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function frame(svg, o) {
+  svg.innerHTML = ""; const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height, m = Object.assign({ l: 64, r: 16, t: 14, b: 40 }, o.m || {});
+  const x = (o.xlog ? lg : lin)(o.x[0], o.x[1], m.l, W - m.r), y = (o.ylog ? lg : lin)(o.y[0], o.y[1], H - m.b, m.t);
+  const g = el("g", { class: "grid" }, svg);
+  (o.yt || []).forEach(v => { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v) }, g); const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg); t.textContent = o.yf ? o.yf(v) : v; });
+  (o.xt || []).forEach(v => { const t = el("text", { x: x(v), y: H - m.b + 18, "text-anchor": "middle" }, svg); t.textContent = o.xf ? o.xf(v) : v; });
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: css("--faint") }, svg);
+  if (o.xl) { const t = el("text", { x: (m.l + W - m.r) / 2, y: H - 6, "text-anchor": "middle" }, svg); t.textContent = o.xl; }
+  return { x, y, W, H, m, svg };
+}
+function path(f, pts, color, o = {}) { if (pts.length < 2) return; el("path", { d: "M" + pts.map(p => `${f.x(p[0]).toFixed(1)} ${f.y(p[1]).toFixed(1)}`).join("L"), fill: "none", stroke: color, "stroke-width": o.w || 2.4, "stroke-dasharray": o.dash || "", "stroke-linejoin": "round", "stroke-linecap": "round", opacity: o.op ?? 1 }, f.svg); }
+function dots(f, pts, color, o = {}) { pts.forEach(p => { if (o.square) el("rect", { x: f.x(p[0]) - 6, y: f.y(p[1]) - 6, width: 12, height: 12, fill: "none", stroke: color, "stroke-width": 2.2 }, f.svg); else el("circle", { cx: f.x(p[0]), cy: f.y(p[1]), r: o.r || 4, fill: color }, f.svg); }); }
+function hline(f, v, color, label, o = {}) { el("line", { x1: f.m.l, x2: f.W - f.m.r, y1: f.y(v), y2: f.y(v), stroke: color, "stroke-dasharray": "4 5", "stroke-width": 1.6 }, f.svg); if (label) { const t = el("text", { x: o.left ? f.m.l + 6 : f.W - f.m.r - 4, y: f.y(v) + (o.below ? 15 : -6), "text-anchor": o.left ? "start" : "end", class: "t-lbl", fill: color }, f.svg); t.textContent = label; } }
+function vline(f, v, color) { el("line", { x1: f.x(v), x2: f.x(v), y1: f.m.t, y2: f.H - f.m.b, stroke: color, "stroke-width": 1.5, "stroke-dasharray": "2 4" }, f.svg); }
+function band(f, y0, y1, color, op) { el("rect", { x: f.m.l, y: f.y(y1), width: f.W - f.m.r - f.m.l, height: Math.max(f.y(y0) - f.y(y1), 0), fill: color, opacity: op || .1 }, f.svg); }
+function label(f, xv, yv, s, color, o = {}) { const t = el("text", { x: f.x(xv) + (o.dx || 0), y: f.y(yv) + (o.dy || 0), "text-anchor": o.anchor || "start", class: "t-lbl", fill: color }, f.svg); t.textContent = s; return t; }
+
+/* ---------------- shared state ---------------- */
+const C = DATA.cas, F = DATA.fv;
+const S = { exI: 2, bdI: 2, bdK: 0, nzI: 2, playing: null, space: "fv" };
+const sevenQ = C.map((c, i) => [c, i]).filter(([c]) => c.taper.n === 7).map(([, i]) => i);
+function segButtons(container, idxs, cur, onPick) {
+  container.innerHTML = "";
+  idxs.forEach(i => { const b = document.createElement("button"); b.type = "button"; b.textContent = C[i].r.toFixed(C[i].r === 1.098 ? 3 : 2) + " Å"; b.setAttribute("aria-pressed", i === cur ? "true" : "false"); b.addEventListener("click", () => onPick(i)); container.appendChild(b); });
+}
+const pressSeg = (container, idxs, cur) => [...container.children].forEach((b, j) => b.setAttribute("aria-pressed", idxs[j] === cur ? "true" : "false"));
+function moveLabel(lab, nOrb) {
+  const m = lab.match(/^([sd]) (.+)->(.+)$/); if (!m) return lab;
+  const parse = s => [...s.matchAll(/([ab])(\d+)/g)].map(q => ({ spin: q[1] === "a" ? "↑" : "↓", o: (+q[2]) % nOrb }));
+  const from = parse(m[2]), to = parse(m[3]), name = o => nOrb === 6 ? ORB[o] : "o" + (o + 1);
+  return (m[1] === "s" ? "1 electron: " : "2 electrons: ") + from.map(f => name(f.o) + f.spin).join(" ") + " → " + to.map(f => name(f.o) + f.spin).join(" ");
+}
+
+/* ---------------- station 1 ---------------- */
+const FVC = DATA.fv_curve;
+function exRow(space, i) {
+  if (space === "cas") { const c = C[i]; return { r: c.r, exact: c.exact, hf: c.hf, cc: c.ccsd_t, adapt: c.adapt.energies[c.adapt.energies.length - 1], k: c.k_chem_acc, cx: c.gates_at_k ? c.gates_at_k.cx : null, wf: c.wf, q: c.taper.n, nOrb: 6, nA: 3 }; }
+  const f = FVC[i]; return { r: f.r, exact: f.exact, hf: f.hf, cc: f.ccsd_t, adapt: f.adapt_final, k: f.k_chem_acc, cx: f.cx_at_k, wf: f.wf, q: f.qubits_tapered, nOrb: 8, nA: 5 };
+}
+function ccState(row) { if (row.cc === null || row.cc === undefined) return { kind: "nc" }; const e = mHa(row.cc - row.exact); return e < -CHEM ? { kind: "collapse", e } : { kind: Math.abs(e) <= CHEM ? "ok" : "over", e }; }
+function drawExplore() {
+  const sp = S.space, rows = C.map((_, i) => exRow(sp, i)), c = rows[S.exI];
+  pressSeg($("ex-seg"), [...C.keys()], S.exI);
+  [...$("ex-space").children].forEach(b => b.setAttribute("aria-pressed", b.dataset.s === sp ? "true" : "false"));
+  $("k-exact").textContent = fmtE(c.exact);
+  $("k-exact-k").textContent = `Exact singlet energy, ${sp === "fv" ? "10 electrons in 8 orbitals" : "6 electrons in 6 orbitals"} (hartree)`;
+  const st = ccState(c);
+  if (st.kind === "nc") { $("k-cc").innerHTML = `<span class="fail">no answer</span>`; $("k-cc-k").textContent = "CCSD(T): the equations did not converge"; }
+  else if (st.kind === "collapse") { $("k-cc").innerHTML = `<span class="fail">−${fmtErr(st.e)}</span><small>mHa</small>`; $("k-cc-k").textContent = "CCSD(T) collapsed BELOW the true energy: an unphysical answer"; }
+  else { $("k-cc").innerHTML = `<span class="${cls(st.e)}">+${fmtErr(st.e)}</span><small>mHa</small>`; $("k-cc-k").textContent = "CCSD(T) error " + (st.kind === "ok" ? "(within target)" : `(${(st.e / CHEM).toFixed(1)}× the 1.6 mHa budget)`); }
+  if (sp === "cas") $("k-cc-k").textContent += " · in this small space the (T) term is exactly zero, so this is CCSD";
+  const ea = mHa(c.adapt - c.exact);
+  $("k-ad").innerHTML = `<span class="${cls(ea)}">${fmtErr(ea, 4)}</span><small>mHa</small>`;
+  $("k-ad-k").textContent = c.k ? `ADAPT-VQE error at convergence · first within 1.6 mHa after ${c.k} bricks (${c.cx.toLocaleString("en-US")} CNOTs, ${c.q} qubits)` : "ADAPT-VQE error";
+  $("k-hf").innerHTML = `${(100 * c.wf.hf_weight).toFixed(1)}<small>%</small>`;
+  $("k-hf-k").textContent = `Weight of the single best (Hartree–Fock) arrangement · ${c.wf.n_over_1pct} arrangements above 1%`;
+  $("ex-rl").textContent = `R = ${c.r} Å`;
+  { const f = frame($("ch-err"), { x: [.85, 3.05], y: [1e-4, 1000], ylog: true, yt: [1e-3, 1e-1, 10, 1000], yf: v => v >= 1 ? v.toLocaleString("en-US") : sci(v), xt: [1, 1.5, 2, 2.5, 3], xf: v => v.toFixed(1) + " Å", xl: "N–N distance", m: { l: 58 } });
+    band(f, 1e-4, CHEM, css("--green"), .08); hline(f, CHEM, css("--green"), "1.6 mHa target", { below: true });
+    const over = rows.filter(q => ccState(q).kind === "ok" || ccState(q).kind === "over").map(q => [q.r, Math.max(Math.abs(mHa(q.cc - q.exact)), 1.1e-4)]);
+    path(f, over, css("--orange"), { w: 2.4 }); dots(f, over, css("--orange"), { r: 4.5 });
+    rows.forEach(q => { const s = ccState(q); if (s.kind === "collapse") { const x = f.x(q.r), y = f.y(Math.min(Math.abs(s.e), 900)); el("path", { d: `M${x - 7} ${y - 6}L${x + 7} ${y - 6}L${x} ${y + 7}Z`, fill: css("--red") }, f.svg); }
+      if (s.kind === "nc") { const t = el("text", { x: f.x(q.r), y: f.y(500) + 6, "text-anchor": "middle", fill: css("--red"), style: "font:700 18px var(--mono)" }, f.svg); t.textContent = "×"; } });
+    const ad = rows.map(q => [q.r, Math.max(mHa(q.adapt - q.exact), 1.1e-4)]); path(f, ad, css("--cyan"), { w: 2.4 }); dots(f, ad, css("--cyan"));
+    vline(f, c.r, css("--pink")); }
+  { const lo = Math.min(...rows.map(q => q.exact)) - .05, hi = Math.max(...rows.map(q => q.hf)) + .05;
+    const f = frame($("ch-pes"), { x: [.85, 3.05], y: [lo, hi], yt: niceTicks(lo, hi), yf: v => v.toFixed(1), xt: [1, 2, 3], xf: v => v.toFixed(0) + " Å", m: { l: 60 } });
+    path(f, rows.map(q => [q.r, q.hf]), css("--faint"), { w: 2 }); path(f, rows.map(q => [q.r, q.exact]), css("--chalk"), { w: 2.6 });
+    const ccp = rows.filter(q => q.cc !== null && q.cc !== undefined).map(q => [q.r, q.cc]); dots(f, ccp, css("--orange"), { r: 3.5 });
+    dots(f, rows.map(q => [q.r, q.adapt]), css("--cyan"), { square: true }); vline(f, c.r, css("--pink")); }
+  { const n = c.nOrb, top = c.wf.top, hfBits = ((1 << c.nA) - 1) * (1 + (1 << n));
+    $("ex-crowd").innerHTML = top.map(([b, w]) => { const cells = []; for (let s = 0; s < 2; s++) for (let q = 0; q < n; q++) cells.push(`<span class="${(b >> (q + s * n)) & 1 ? (s ? "onb" : "on") : ""}"></span>`);
+      const isHF = b === hfBits;
+      return `<div style="display:grid;grid-template-columns:auto 1fr 70px;gap:10px;align-items:center;margin:4px 0"><span class="det" style="grid-template-columns:repeat(${n},9px)">${cells.join("")}</span><div style="height:12px;background:var(--panel-2);border-radius:6px;overflow:hidden"><div style="height:100%;width:${Math.max(100 * w, .6)}%;background:${isHF ? "var(--cyan)" : "var(--pink)"}"></div></div><span style="font:500 13px var(--mono);text-align:right">${(100 * w).toFixed(w < .01 ? 2 : 1)}%</span></div>`; }).join("");
+    $("ex-crowd-note").textContent = `Each row is one way to seat the ${2 * c.nA} electrons in ${n} orbitals (top row spin ↑, bottom row spin ↓; lower-energy orbitals on the left). Blue = the Hartree–Fock arrangement. Bars are its share of the exact wavefunction.`; }
+  { const hf = 100 * c.wf.hf_weight;
+    const ccTxt = st.kind === "nc" ? "<b class='fail'>does not converge</b>" : st.kind === "collapse" ? `<b class='fail'>collapses ${fmtErr(st.e)} mHa below the true energy</b>, which no correct method can do` : st.kind === "ok" ? "is within the target" : `is off by <b class='${cls(st.e)}'>${fmtErr(st.e)} mHa</b>, ${(st.e / CHEM).toFixed(1)}× the budget`;
+    $("ex-story").innerHTML = `<p class="plain">${hf > 80 ? "One arrangement dominates here, so classical shortcuts mostly work." : hf > 40 ? "Several arrangements now share the wavefunction. Single-reference methods start to drift." : "No single arrangement dominates any more: strong (static) correlation."}</p>
+      <p>CCSD(T) ${ccTxt}. ADAPT-VQE ${c.k ? `reaches 1.6 mHa with <b>${c.k} bricks</b> on <b>${c.q} qubits</b>` : "is shown at convergence"}.</p>
+      <p class="note">Honest scope: the exact answer here is classical (${c.wf.sector_dim.toLocaleString("en-US")} arrangements). Multireference classical methods (CASSCF, NEVPT2, DMRG) also handle this; the point is the trend as spaces grow (4.3 billion arrangements for N₂ in a realistic basis).</p>`; }
+}
+
+/* ---------------- station 2 ---------------- */
+function drawBuild(fromSlider) {
+  const c = C[S.bdI], n = c.adapt.ops.length;
+  pressSeg($("bd-seg"), [...C.keys()], S.bdI);
+  const kEl = $("bd-k"); kEl.max = n; if (!fromSlider) kEl.value = S.bdK; $("bd-kv").textContent = S.bdK;
+  const rots = E.adaptRotations(c.adapt, S.bdK), st = E.prepare(c.taper.n, c.taper.ref_bits, rots), e = E.energySV(st, c.H), err = mHa(e - c.exact);
+  const g = E.countGates(E.rotationGates(rots, c.taper.n));
+  $("bd-e").textContent = fmtE(e);
+  $("bd-err").innerHTML = `<span class="${cls(err)}">${fmtErr(err, 3)}</span><small>mHa</small>`;
+  $("bd-err-k").textContent = Math.abs(err) <= CHEM ? "Within chemical accuracy ✓" : `Error vs exact · ${(err / CHEM).toFixed(1)}× the 1.6 mHa budget`;
+  $("bd-cx").textContent = g.cx.toLocaleString("en-US"); $("bd-1q").textContent = g["1q"].toLocaleString("en-US");
+  const f = frame($("ch-conv"), { x: [0, Math.max(n, 10)], y: [1e-4, 500], ylog: true, yt: [1e-3, 1e-1, 10], yf: v => v >= 1 ? v : sci(v), xt: [0, 10, 20, 30, 40, 50].filter(v => v <= n), xl: "bricks in the circuit" });
+  band(f, 1e-4, CHEM, css("--green"), .08); hline(f, CHEM, css("--green"), "1.6 mHa target", { below: true });
+  path(f, c.adapt.energies.map((v, j) => [j, Math.max(mHa(v - c.exact), 1.1e-4)]), css("--cyan"), { w: 2.2, op: .55 });
+  dots(f, [[S.bdK, Math.max(err, 1.1e-4)]], css("--pink"), { r: 6 }); vline(f, c.k_chem_acc, css("--green"));
+  label(f, c.k_chem_acc, 200, ` target at ${c.k_chem_acc}`, css("--green"));
+  $("bd-list").innerHTML = c.adapt.labels.slice(0, S.bdK).map((lab, j) => `<tr class="${j === S.bdK - 1 ? "new" : ""}"><td class="n">${j + 1}</td><td>${moveLabel(lab, c.n_orb)}</td><td class="n">${c.adapt.thetas[S.bdK - 1][j].toFixed(3)}</td></tr>`).reverse().join("") || `<tr><td colspan="3" class="note">No bricks yet: this is the Hartree–Fock starting point.</td></tr>`;
+  // circuit sketch
+  const svg = $("ch-circ"), nq = c.taper.n, step = 34, W = 90 + Math.max(S.bdK, 1) * step + 40, H = 40 + nq * 26;
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = "";
+  for (let q = 0; q < nq; q++) { const y = 26 + q * 26; el("line", { x1: 60, x2: W - 20, y1: y, y2: y, stroke: css("--line"), "stroke-width": 2 }, svg); const t = el("text", { x: 50, y: y + 4, "text-anchor": "end", style: "font:12px var(--mono)", fill: css("--faint") }, svg); t.textContent = "q" + q; }
+  for (let q = 0; q < nq; q++) if ((c.taper.ref_bits >> q) & 1) { const r = el("rect", { x: 64, y: 26 + q * 26 - 9, width: 18, height: 18, rx: 4, fill: css("--yellow") }, svg); }
+  c.adapt.ops.slice(0, S.bdK).forEach((op, j) => { let sup = 0; op.forEach(([x, z]) => { sup |= x | z; }); const qs = []; for (let q = 0; q < nq; q++) if ((sup >> q) & 1) qs.push(q); if (!qs.length) return;
+    const x = 92 + j * step, y0 = 26 + qs[0] * 26 - 11, y1 = 26 + qs[qs.length - 1] * 26 + 11;
+    el("rect", { x, y: y0, width: 24, height: y1 - y0, rx: 5, fill: j === S.bdK - 1 ? css("--pink") : css("--cyan"), opacity: j === S.bdK - 1 ? .95 : .55 }, svg);
+    qs.forEach(q => el("circle", { cx: x + 12, cy: 26 + q * 26, r: 3.5, fill: css("--board") }, svg)); });
+  const t = el("text", { x: 60, y: H - 6, style: "font:12px var(--mono)", fill: css("--faint") }, svg); t.textContent = "yellow = electrons in the starting state";
+}
+function play() {
+  if (S.playing) { clearInterval(S.playing); S.playing = null; $("bd-play").textContent = "▶ Build it"; return; }
+  const c = C[S.bdI]; if (S.bdK >= c.adapt.ops.length) S.bdK = 0; $("bd-play").textContent = "❚❚ Pause";
+  S.playing = setInterval(() => { if (S.bdK >= C[S.bdI].adapt.ops.length) { play(); return; } S.bdK++; drawBuild(); }, 260);
+}
+
+/* ---------------- station 3 ---------------- */
+let nzTimer = null, nzRun = 0;
+const nzState = () => { const c = C[S.nzI], k = +$("nz-k").value, r2 = 10 ** +$("nz-r2").value, ro = +$("nz-ro").value; return { c, k, noise: { r2, r1: r2 / 12, p_ro: ro } }; };
+function nzLabels() { const { k, noise } = nzState(); $("nz-kv").textContent = k; $("nz-r2v").textContent = sci(+noise.r2.toPrecision(2)) + `  (1 in ${Math.round(1 / noise.r2).toLocaleString("en-US")})`; $("nz-rov").textContent = (100 * noise.p_ro).toFixed(2) + "%"; }
+function scheduleNoise() { nzLabels(); clearTimeout(nzTimer); nzTimer = setTimeout(runNoise, 250); }
+async function runNoise() {
+  const { c, k, noise } = nzState(), my = ++nzRun; $("nz-spin").innerHTML = `<span class="spinner" aria-label="computing"></span>`; $("nz-prog").style.width = "10%";
+  let r; try { r = await runJob("noise", { adapt: c.adapt, k, n: c.taper.n, ref: c.taper.ref_bits, H: c.H, noise }, f => { $("nz-prog").style.width = (10 + 80 * f) + "%"; }); } catch (e) { $("nz-verdict").textContent = "Simulation error"; $("nz-vnote").textContent = e.message; return; }
+  if (my !== nzRun) return; $("nz-prog").style.width = "100%"; setTimeout(() => { $("nz-prog").style.width = "0"; }, 400); $("nz-spin").innerHTML = "";
+  const ideal = c.adapt.energies[k], errs = { raw: mHa(r.raw - c.exact), rem: mHa(r.rem - c.exact), zne_lin: mHa(r.zne_lin - c.exact), zne_rich: mHa(r.zne_rich - c.exact), zne_exp: mHa(r.zne_exp - c.exact) };
+  const idealErr = mHa(ideal - c.exact), best = Math.min(...Object.values(errs).filter(Number.isFinite).map(Math.abs)), shots = (r.pec_gamma * r.sigma1 / Math.max(1.6e-3 - Math.abs(ideal - c.exact), 1e-4)) ** 2;
+  $("nz-verdict").innerHTML = best <= CHEM ? `<span class="ok">Within chemical accuracy</span>` : best <= 10 * CHEM ? `<span class="warn">Close, ${fmtErr(best)} mHa off</span>` : `<span class="fail">${fmtErr(best)} mHa off at best</span>`;
+  $("nz-vnote").innerHTML = `Circuit: ${k} bricks, ${r.gates.cx.toLocaleString("en-US")} CNOTs on ${c.taper.n} qubits. Noise-free, this circuit is ${fmtErr(idealErr, 3)} mHa from exact${Math.abs(idealErr) > CHEM ? " (add bricks to reach the target)" : ""}. Expected two-qubit faults per run: about ${(() => { const f = r.gates.cx * noise.r2; return f < .01 ? "<0.01" : f.toFixed(f < 1 ? 2 : 1); })()}.<br>PEC could remove the bias, but needs about <b>${shots < 10 ? shots.toFixed(1) : sci(+shots.toPrecision(2))}</b> shots per Pauli term (sampling overhead γ = ${r.pec_gamma < 10 ? r.pec_gamma.toFixed(2) : sci(+r.pec_gamma.toPrecision(2))}).`;
+  // ablation bars
+  { const keys = [["raw", "raw"], ["rem", "readout fix"], ["zne_lin", "+ZNE linear"], ["zne_rich", "+ZNE Richardson"], ["zne_exp", "+ZNE exponential"]];
+    const svg = $("ch-abl"), f = frame(svg, { x: [0, keys.length], y: [.01, 5000], ylog: true, yt: [.01, .1, 1, 10, 100, 1000], yf: v => v >= 1 ? v.toLocaleString("en-US") : v, m: { b: 34 } });
+    band(f, .01, CHEM, css("--green"), .08); hline(f, CHEM, css("--green"), "1.6 mHa target", { below: true, left: true });
+    keys.forEach(([key, name], i) => { const v = Math.abs(errs[key]); const x = f.x(i + .5); const ok = Number.isFinite(v); const h = ok ? f.y(.01) - f.y(Math.max(v, .011)) : 0;
+      el("rect", { x: x - 34, y: f.y(.01) - h, width: 68, height: h, rx: 4, fill: ok ? (v <= CHEM ? css("--green") : v <= 16 ? css("--orange") : css("--red")) : css("--line"), opacity: .85 }, svg);
+      const t = el("text", { x, y: f.y(.01) - h - 6, "text-anchor": "middle", class: "t-lbl", fill: css("--chalk") }, svg); t.textContent = ok ? fmtErr(v) : "no fit";
+      const t2 = el("text", { x, y: f.H - f.m.b + 18, "text-anchor": "middle" }, svg); t2.textContent = name; }); }
+  // ZNE chart
+  { const pts = [1, 3, 5].map((s, i) => [s, mHa(r.remScaled[i] - c.exact)]), all = pts.map(p => p[1]).concat([errs.zne_lin, errs.zne_rich, Number.isFinite(errs.zne_exp) ? errs.zne_exp : 0, 0, idealErr]);
+    const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * .12 + .5;
+    const f = frame($("ch-zne"), { x: [0, 5.5], y: [lo - pad, hi + pad], yt: niceTicks(lo - pad, hi + pad), yf: v => fmtTick(v), xt: [0, 1, 3, 5], xf: v => v + "×", xl: "noise scale (0 = noiseless)" });
+    hline(f, 0, css("--chalk"), "exact answer"); if (Math.abs(idealErr) > .05) hline(f, idealErr, css("--faint"), "this circuit, noise-free", { below: true });
+    const s = [0, 1, 3, 5]; path(f, s.map(v => [v, interp([1, 3, 5], pts.map(p => p[1]), v)]), css("--cyan"), { w: 1.8, dash: "5 5" });
+    path(f, [[0, errs.zne_lin], [1, pts[0][1]], [3, pts[1][1]]], css("--orange"), { w: 1.6, dash: "2 5" });
+    dots(f, pts, css("--pink"), { r: 6 }); dots(f, [[0, errs.zne_rich]], css("--cyan"), { r: 6 }); dots(f, [[0, errs.zne_lin]], css("--orange"), { r: 5 });
+    label(f, .15, errs.zne_rich, "Richardson estimate", css("--cyan"), { dy: 20 }); label(f, 1.1, pts[0][1], "measured", css("--pink"), { dy: -10 }); }
+  // sweep
+  { const f = frame($("ch-sweep"), { x: [1e-6, 1e-2], xlog: true, y: [.5, 5000], ylog: true, yt: [1, 10, 100, 1000], yf: v => v.toLocaleString("en-US"), xt: [1e-6, 1e-5, 1e-4, 1e-3, 1e-2], xf: v => sci(v), xl: "two-qubit gate error" });
+    hline(f, CHEM, css("--green"), "1.6 mHa", { below: true });
+    [["1.098", "rem", css("--faint"), "4 5"], ["1.098", "rem+zne_rich", css("--cyan")], ["2.1", "rem+zne_rich", css("--pink")]].forEach(([g, key, col, dash]) => { const sw = EXTRA.noise[g].sweep; path(f, sw.map(s => [s.r2, Math.max(Math.abs(s[key]), .5)]), col, { w: 2.2, dash }); dots(f, sw.map(s => [s.r2, Math.max(Math.abs(s[key]), .5)]), col, { r: 3 }); });
+    dots(f, [[noise.r2, Math.max(Math.abs(errs.zne_rich), .5)]], css("--yellow"), { r: 7 });
+    label(f, 2e-3, 3000, "today", css("--orange"), { anchor: "middle" }); label(f, 3e-6, 3000, "needed", css("--green"), { anchor: "middle" }); }
+  $("nz-table").innerHTML = `<thead><tr><th>Method</th><th>Energy (Ha)</th><th>Error (mHa)</th><th>What it does</th></tr></thead><tbody>
+    <tr><td>Noise-free circuit</td><td class="n">${fmtE(ideal)}</td><td class="n">${idealErr.toFixed(3)}</td><td>What a perfect chip would give for this circuit</td></tr>
+    <tr><td>Raw noisy run</td><td class="n">${fmtE(r.raw)}</td><td class="n">${errs.raw.toFixed(1)}</td><td>Gate and readout errors, no correction</td></tr>
+    <tr><td>Readout fix (REM)</td><td class="n">${fmtE(r.rem)}</td><td class="n">${errs.rem.toFixed(1)}</td><td>Undo biased measurement flips</td></tr>
+    <tr><td>+ ZNE linear</td><td class="n">${fmtE(r.zne_lin)}</td><td class="n">${errs.zne_lin.toFixed(1)}</td><td>Straight line through 1× and 3× noise</td></tr>
+    <tr><td>+ ZNE Richardson</td><td class="n">${fmtE(r.zne_rich)}</td><td class="n">${errs.zne_rich.toFixed(1)}</td><td>Curve through 1×, 3×, 5×</td></tr>
+    <tr><td>+ ZNE exponential</td><td class="n">${Number.isFinite(r.zne_exp) ? fmtE(r.zne_exp) : "no fit"}</td><td class="n">${Number.isFinite(errs.zne_exp) ? errs.zne_exp.toFixed(1) : "–"}</td><td>Decay curve through 1×, 3×, 5×</td></tr>
+    <tr><td>PEC</td><td class="n">not run</td><td class="n">–</td><td>Would cancel the noise on average; cost grows as γ² with γ = ${r.pec_gamma < 10 ? r.pec_gamma.toFixed(2) : sci(+r.pec_gamma.toPrecision(2))}</td></tr></tbody>`;
+}
+const niceTicks = (a, b) => { const span = b - a, st = 10 ** Math.floor(Math.log10(span / 4)), step = [1, 2, 5, 10].map(m => m * st).find(s => span / s <= 5); const out = []; for (let v = Math.ceil(a / step) * step; v <= b; v += step) out.push(+v.toPrecision(6)); return out; };
+const fmtTick = v => Math.abs(v) >= 1000 ? v.toLocaleString("en-US") : Math.abs(v) >= 1 ? +v.toFixed(1) + "" : v.toPrecision(2);
+const interp = (xs, ys, x) => { let e = 0; for (let i = 0; i < xs.length; i++) { let L = 1; for (let j = 0; j < xs.length; j++) if (j !== i) L *= (x - xs[j]) / (xs[i] - xs[j]); e += L * ys[i]; } return e; };
+
+/* ---------------- station 4 ---------------- */
+function sqdSystems() {
+  return F.map((f, i) => ({ id: "fv" + i, label: `Full valence, 11 qubits · ${f.r} Å`, p: f, kmax: f.adapt.ops.length, Ks: [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56] }))
+    .concat(sevenQ.map(i => ({ id: "cas" + i, label: `CAS(6,6), 7 qubits · ${C[i].r} Å`, p: C[i], kmax: Math.min(C[i].adapt.ops.length, 12), Ks: [4, 6, 8, 10, 12, 14, 16, 18, 20] })));
+}
+const SQS = sqdSystems(); let SQR = null;
+function sqLabels() { const sys = SQS.find(s => s.id === $("sq-sys").value), k = $("sq-k"); k.max = sys.kmax; $("sq-kv").textContent = k.value; const r2 = 10 ** +$("sq-r2").value; $("sq-r2v").textContent = sci(+r2.toPrecision(2)); $("sq-budget").max = sys.Ks.length - 1; budgetLabel(); }
+function budgetLabel() { const sys = SQS.find(s => s.id === $("sq-sys").value), K = sys.Ks[+$("sq-budget").value], total = sys.p.wf.sector_dim; $("sq-bv").textContent = K; $("sq-frac").textContent = `${(K * K).toLocaleString("en-US")} of ${total.toLocaleString("en-US")} arrangements (${(100 * K * K / total).toFixed(0)}%)`; $("sq-space").textContent = total.toLocaleString("en-US"); }
+async function runSQD(fixedSeed) {
+  const sys = SQS.find(s => s.id === $("sq-sys").value), p = sys.p, k = +$("sq-k").value, r2 = 10 ** +$("sq-r2").value, shots = +$("sq-shots").value;
+  const noise = { r2, r1: r2 / 12, p_ro: .015 }; $("sq-run").disabled = true; $("sq-prog").style.width = "2%";
+  ["sq-err", "sq-rnd", "sq-cls", "sq-adv"].forEach(id => { $(id).innerHTML = `<span class="spinner" aria-label="computing"></span>`; });
+  try { SQR = await runJob("sqd", { adapt: p.adapt, k, n: p.taper.n, ref: p.taper.ref_bits, taper: p.taper, prob: { n_orb: p.n_orb, n_alpha: p.n_alpha, n_beta: p.n_beta, h: p.h, g: p.g, ecore: p.ecore }, noise, shots, Ks: sys.Ks, seed: fixedSeed || ((Date.now() % 100000) + 13) }, f => { $("sq-prog").style.width = (2 + 96 * f) + "%"; }); SQR.sys = sys; }
+  catch (e) { $("sq-err").textContent = "error"; $("sq-run").disabled = false; return; }
+  $("sq-prog").style.width = "100%"; setTimeout(() => { $("sq-prog").style.width = "0"; }, 400); $("sq-run").disabled = false;
+  drawSQD();
+}
+function drawSQD() {
+  budgetLabel(); if (!SQR || SQR.sys.id !== $("sq-sys").value) return;
+  const sys = SQR.sys, p = sys.p, total = p.wf.sector_dim, row = SQR.curve[+$("sq-budget").value];
+  const e = v => v === null ? null : mHa(v - p.exact);
+  const show = (id, v) => { $(id).innerHTML = v === null ? `<span class="note">not enough distinct patterns</span>` : `<span class="${cls(v)}">${fmtErr(v, 2)}</span><small>mHa</small>`; };
+  show("sq-err", e(row.chip)); show("sq-rnd", e(row.random)); show("sq-cls", e(row.classical));
+  const ce = e(row.chip), re = e(row.random);
+  $("sq-adv").innerHTML = ce !== null && re !== null ? (ce > 1e-9 ? `${(re / ce).toFixed(re / ce < 10 ? 1 : 0)}<small>× better</small>` : (re > 1e-6 ? `<span class="ok">exact</span>` : "tie")) : "–";
+  $("sq-adv-k").textContent = ce !== null && ce <= CHEM ? "Chip vs random at this budget · chip is within 1.6 mHa" : "Chip vs random at this budget";
+  const f = frame($("ch-sq"), { x: [0, 1], y: [1e-3, 2000], ylog: true, yt: [1e-2, 1, 100], yf: v => v >= 1 ? v.toLocaleString("en-US") : sci(v), xt: [0, .25, .5, .75, 1], xf: v => (100 * v).toFixed(0) + "%", xl: "share of all arrangements solved exactly (budget² ÷ total)", m: { l: 58 } });
+  band(f, 1e-3, CHEM, css("--green"), .08); hline(f, CHEM, css("--green"), "1.6 mHa", { below: true, left: true });
+  const line = (key, col) => { const pts = SQR.curve.filter(q => q[key] !== null).map(q => [q.dets / total, Math.max(mHa(q[key] - p.exact), 1.1e-3)]); path(f, pts, col, { w: 2.4 }); dots(f, pts, col, { r: 3.5 }); };
+  line("classical", css("--faint")); line("random", css("--orange")); line("chip", css("--green"));
+  vline(f, row.dets / total, css("--yellow"));
+  $("sq-extra").innerHTML = `This run: ${SQR.cx} CNOTs per shot, ${(100 * SQR.good).toFixed(0)}% of shots had the right electron count before repair (random tapered bitstrings: about 20%). The chip found ${SQR.nChip} distinct orbital patterns; random bitstrings found ${SQR.nRand} of ${sys.Ks[sys.Ks.length - 1]}.`;
+  const n = p.n_orb, maxc = SQR.top[0][1];
+  $("sq-hist").innerHTML = SQR.top.map(([b, cnt]) => { const a = b & ((1 << n) - 1), bb = (b >> n) & ((1 << n) - 1), good = E.popcount(a) === p.n_alpha && E.popcount(bb) === p.n_beta;
+    const cells = []; for (let s = 0; s < 2; s++) for (let q = 0; q < n; q++) cells.push(`<span class="${(b >> (q + s * n)) & 1 ? (s ? "onb" : "on") : ""}"></span>`);
+    return `<div style="display:grid;grid-template-columns:auto 1fr 64px;gap:10px;align-items:center;margin:3px 0"><span class="det" style="grid-template-columns:repeat(${n},9px)">${cells.join("")}</span><div style="height:11px;background:var(--panel-2);border-radius:6px;overflow:hidden"><div style="height:100%;width:${100 * cnt / maxc}%;background:${good ? "var(--green)" : "var(--orange)"}"></div></div><span style="font:500 12.5px var(--mono);text-align:right">${cnt}${good ? "" : " ⚠"}</span></div>`; }).join("") +
+    `<p class="note" style="margin-top:6px"><span class="ok">green</span> = right electron count; <span class="warn">orange ⚠</span> = broken by noise, repaired before solving.</p>`;
+}
+function drawFlow() {
+  const svg = $("ch-flow"); svg.innerHTML = "";
+  const steps = [["Noisy chip", "runs a shallow circuit", "--cyan"], ["Bitstrings", "which seats were filled", "--pink"], ["Repair", "fix wrong electron counts", "--orange"], ["Top patterns", "keep the most frequent", "--yellow"], ["Exact solve", "inside that subspace", "--green"]];
+  steps.forEach(([t, s, c], i) => { const x = 10 + i * 238; el("rect", { x, y: 30, width: 200, height: 84, rx: 12, fill: "none", stroke: css(c), "stroke-width": 2 }, svg);
+    const a = el("text", { x: x + 100, y: 66, "text-anchor": "middle", style: "font:700 24px var(--hand)", fill: css(c) }, svg); a.textContent = t;
+    const b = el("text", { x: x + 100, y: 92, "text-anchor": "middle", style: "font:13px var(--sans)", fill: css("--dim") }, svg); b.textContent = s;
+    if (i < steps.length - 1) el("path", { d: `M${x + 206} 72L${x + 232} 72M${x + 224} 65L${x + 232} 72L${x + 224} 79`, stroke: css("--chalk"), "stroke-width": 2, fill: "none" }, svg); });
+}
+
+/* ---------------- station 5: self-test ---------------- */
+async function selfTest() {
+  const list = $("pf-list"), badge = $("badge"), bt = $("badge-t"); list.innerHTML = ""; badge.className = "badge"; bt.textContent = "Self-test running…";
+  let pass = 0, total = 0;
+  const add = (name, ok, detail) => { total++; if (ok) pass++; list.insertAdjacentHTML("beforeend", `<div class="check"><span class="s ${ok ? "ok" : "fail"}">${ok ? "✓" : "✗"}</span><span>${name}</span><span class="d">${detail}</span></div>`); bt.textContent = `Checking… ${pass}/${total}`; };
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  for (const c of C) { let worst = 0; for (let k = 0; k < c.adapt.energies.length; k++) worst = Math.max(worst, Math.abs(E.energySV(E.prepare(c.taper.n, c.taper.ref_bits, E.adaptRotations(c.adapt, k)), c.H) - c.adapt.energies[k])); add(`ADAPT circuit energies, ${c.r} Å (${c.adapt.energies.length} steps)`, worst < 1e-8, `max Δ ${worst.toExponential(1)} Ha`); await tick(); }
+  for (const i of [2, 8]) { const c = C[i], strs = []; for (let s = 0; s < 64; s++) if (E.popcount(s) === 3) strs.push(s); const r = E.subspaceEnergy(c, strs); add(`Determinant Hamiltonian = exact energy, ${c.r} Å`, Math.abs(r.energy - c.exact) < 1e-8, `Δ ${(r.energy - c.exact).toExponential(1)} Ha`); await tick(); }
+  for (const s of DATA.checks.subspace) { const p = (s.kind === "cas" ? C : F)[s.index], r = E.subspaceEnergy(p, s.strings); add(`SQD subspace solver vs Python (${s.dim} arrangements)`, Math.abs(r.energy - s.energy) < 1e-8, `Δ ${(r.energy - s.energy).toExponential(1)} Ha`); await tick(); }
+  { const c = C[8], g = E.rotationGates(E.adaptRotations(c.adapt, c.k_chem_acc), c.taper.n), smp = E.sampleNoisy(g, c.taper.n, c.taper.ref_bits, { r2: 0, r1: 0, p_ro: 0 }, 500, { seed: 4 }); const sub = E.sqdSubspace(Array.from(smp, b => E.untaper(c.taper, b)), 6, 3, 3, false); add("Tapered samples map back to valid arrangements", sub.fracGood === 1, `${(100 * sub.fracGood).toFixed(0)}% valid`); }
+  bt.textContent = `Checking noise engine… ${pass}/${total}`;
+  const nc = DATA.checks.noise.filter(s => s.r2 === 3e-3 || s.r2 === 1e-5).map(s => { const c = C[s.cas_index]; return { adapt: c.adapt, k: s.k, n: c.taper.n, ref: c.taper.ref_bits, H: c.H, noise: { r2: s.r2, r1: s.r1, p_ro: s.p_ro }, ref_vals: s, r: c.r }; });
+  try { const res = await runJob("selftest-noise", { checks: nc }, null, "test"); res.forEach((w, i) => add(`Noisy energies + ZNE vs Python, ${nc[i].r} Å, gate error ${sci(nc[i].noise.r2)}`, w < 1e-8, `max Δ ${w.toExponential(1)} Ha`)); }
+  catch (e) { add("Noise engine", false, e.message); }
+  badge.className = "badge " + (pass === total ? "ok" : "bad"); bt.textContent = pass === total ? `Engine verified · ${pass}/${total} checks vs Python` : `${total - pass} check(s) failed`;
+}
+
+/* ---------------- wiring ---------------- */
+const tabs = [...document.querySelectorAll("nav.tabs button")];
+function showTab(id) { tabs.forEach(t => { const on = t.getAttribute("aria-controls") === id; t.setAttribute("aria-selected", on ? "true" : "false"); $(t.getAttribute("aria-controls")).hidden = !on; }); if (id === "noise" && !runNoise.done) { runNoise.done = true; runNoise(); } try { history.replaceState(null, "", "#" + id); } catch (e) {} }
+tabs.forEach(t => t.addEventListener("click", () => showTab(t.getAttribute("aria-controls"))));
+$("badge").addEventListener("click", () => showTab("proof"));
+segButtons($("ex-seg"), [...C.keys()], S.exI, i => { S.exI = i; drawExplore(); });
+segButtons($("bd-seg"), [...C.keys()], S.bdI, i => { S.bdI = i; S.bdK = Math.min(S.bdK, C[i].adapt.ops.length); drawBuild(); });
+segButtons($("nz-seg"), sevenQ, S.nzI, i => { S.nzI = i; pressSeg($("nz-seg"), sevenQ, i); $("nz-k").max = C[i].adapt.ops.length; $("nz-k").value = C[i].k_half || C[i].k_chem_acc; scheduleNoise(); });
+$("bd-k").addEventListener("input", e => { S.bdK = +e.target.value; drawBuild(true); });
+$("bd-minus").addEventListener("click", () => { S.bdK = Math.max(0, S.bdK - 1); drawBuild(); });
+$("bd-plus").addEventListener("click", () => { S.bdK = Math.min(C[S.bdI].adapt.ops.length, S.bdK + 1); drawBuild(); });
+$("bd-jump").addEventListener("click", () => { S.bdK = C[S.bdI].k_chem_acc; drawBuild(); });
+$("bd-play").addEventListener("click", play);
+["nz-k", "nz-r2", "nz-ro"].forEach(id => $(id).addEventListener("input", scheduleNoise));
+$("nz-today").addEventListener("click", () => { $("nz-r2").value = Math.log10(3e-3); $("nz-ro").value = .015; scheduleNoise(); });
+// "Future chips": the largest gate error at which mitigated (REM + ZNE) results stay within 1.6 mHa in the Python sweep
+const FUTURE_R2 = (() => { const sw = (EXTRA.noise["1.098"] || {}).sweep || []; const okk = sw.filter(s => Math.min(Math.abs(s["rem+zne_rich"]), Math.abs(s["rem+zne_exp"] ?? 1e9)) <= CHEM).map(s => s.r2); return okk.length ? Math.max(...okk) : 1e-5; })();
+$("nz-future").addEventListener("click", () => { $("nz-r2").value = Math.log10(FUTURE_R2); $("nz-ro").value = .005; scheduleNoise(); });
+$("nz-k").max = C[S.nzI].adapt.ops.length; $("nz-k").value = C[S.nzI].k_half || C[S.nzI].k_chem_acc; nzLabels();
+$("sq-sys").innerHTML = SQS.map(s => `<option value="${s.id}">${s.label}</option>`).join(""); $("sq-sys").value = "fv2";
+$("sq-sys").addEventListener("change", () => { const s = SQS.find(q => q.id === $("sq-sys").value); $("sq-k").max = s.kmax; $("sq-k").value = Math.min(4, s.kmax); $("sq-budget").value = Math.floor(s.Ks.length / 2) - 1; sqLabels(); drawSQD(); });
+["sq-k", "sq-r2"].forEach(id => $(id).addEventListener("input", sqLabels)); sqLabels();
+$("sq-run").addEventListener("click", () => runSQD());
+$("sq-budget").addEventListener("input", drawSQD);
+$("sq-repro").addEventListener("click", () => { $("sq-sys").value = "fv2"; const s = SQS.find(q => q.id === "fv2"); $("sq-k").max = s.kmax; $("sq-k").value = 4; $("sq-r2").value = Math.log10(3e-3); $("sq-shots").value = "3000"; $("sq-budget").value = 5; sqLabels(); runSQD(101); });
+[...$("ex-space").children].forEach(b => b.addEventListener("click", () => { S.space = b.dataset.s; drawExplore(); }));
+$("bigtext").addEventListener("click", e => { const on = document.body.classList.toggle("big"); e.currentTarget.setAttribute("aria-pressed", on ? "true" : "false"); });
+$("pf-run").addEventListener("click", selfTest);
+drawExplore(); S.bdK = 0; drawBuild(); drawFlow();
+const startTab = (location.hash || "").replace("#", ""); if (["explore", "build", "noise", "sqd", "proof"].includes(startTab)) showTab(startTab);
+setTimeout(selfTest, 300);
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@ validated parameters, and returns a JSON-serialisable dict. Expensive intermedia
 from __future__ import annotations
 
 import math
+import os
 import subprocess
 import sys
 import threading
@@ -65,9 +66,10 @@ class _LRU:
 
 _branch = {}                 # r -> (problems, C) along the symmetric RHF branch (small, kept)
 _branch_lock = threading.Lock()
-_prepared = _LRU(16)         # (r, space) -> Prepared
-_adapt = _LRU(32)            # (r, space) -> (res, max_ops)
-_sparse = _LRU(8)            # (r, space) -> full-space sparse H (for SQD)
+# cache sizes are configurable so the app fits small hosts (e.g. a 512 MB instance)
+_prepared = _LRU(int(os.environ.get("PREPARED_CACHE", "16")))  # (r, space) -> Prepared
+_adapt = _LRU(int(os.environ.get("ADAPT_CACHE", "32")))        # (r, space) -> (res, max_ops)
+_sparse = _LRU(int(os.environ.get("SPARSE_CACHE", "8")))       # (r, space) -> full-space sparse H (for SQD)
 _key_locks: dict = {}
 _key_locks_lock = threading.Lock()
 

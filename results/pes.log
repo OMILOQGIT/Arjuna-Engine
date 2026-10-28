@@ -1,0 +1,13 @@
+R=0.900 CAS66 12->7q | CCSD(T) err    +0.45 mHa | ADAPT err 0.00194 mHa, chem.acc @ 20 ops (896 CX) | FV 16->11q ADAPT err 0.0993 mHa @47 ops (211s)
+R=1.000 CAS66 12->7q | CCSD(T) err    +0.98 mHa | ADAPT err 0.00002 mHa, chem.acc @ 19 ops (840 CX) | FV 16->11q ADAPT err 0.3413 mHa @54 ops (203s)
+R=1.098 CAS66 12->7q | CCSD(T) err    +1.95 mHa | ADAPT err 0.00000 mHa, chem.acc @ 20 ops (888 CX) | FV 16->11q ADAPT err 0.2441 mHa @79 ops (222s)
+R=1.200 CAS66 12->7q | CCSD(T) err    +3.67 mHa | ADAPT err -0.00000 mHa, chem.acc @ 21 ops (1048 CX) | FV 16->11q ADAPT err 0.3302 mHa @66 ops (210s)
+R=1.350 CAS66 12->7q | CCSD(T) err    +7.69 mHa | ADAPT err 0.00000 mHa, chem.acc @ 26 ops (1320 CX) | FV 16->11q ADAPT err 1.2344 mHa @90 ops (173s)
+R=1.500 CAS66 12->7q | CCSD(T) err   +12.09 mHa | ADAPT err 0.00000 mHa, chem.acc @ 29 ops (1456 CX) | FV 16->11q ADAPT err 0.9748 mHa @96 ops (143s)
+R=1.700 CAS66 12->7q | CCSD(T) err    +6.73 mHa | ADAPT err -0.00000 mHa, chem.acc @ 33 ops (1640 CX) | FV 16->11q ADAPT err 0.8972 mHa @93 ops (160s)
+R=1.900 CAS66 12->7q | CCSD(T) err   -46.62 mHa | ADAPT err 0.00000 mHa, chem.acc @ 40 ops (2112 CX) | FV 16->11q ADAPT err 0.5801 mHa @80 ops (158s)
+R=2.100 CAS66 12->7q | CCSD(T) err  -126.81 mHa | ADAPT err 0.00001 mHa, chem.acc @ 35 ops (1728 CX) | FV 16->11q ADAPT err 0.3005 mHa @70 ops (123s)
+R=2.400 CAS66 12->7q | CCSD(T) err  -247.78 mHa | ADAPT err 0.00004 mHa, chem.acc @ 37 ops (1840 CX) | FV 16->11q ADAPT err 0.1323 mHa @71 ops (113s)
+R=2.700 CAS66 12->7q | CCSD(T) err     +nan mHa | ADAPT err 0.00002 mHa, chem.acc @ 37 ops (1752 CX) | FV 16->11q ADAPT err 0.0578 mHa @73 ops (163s)
+R=3.000 CAS66 12->7q | CCSD(T) err     +nan mHa | ADAPT err 0.00012 mHa, chem.acc @ 33 ops (1672 CX) | FV 16->11q ADAPT err 0.0320 mHa @60 ops (147s)
+saved results/pes.json

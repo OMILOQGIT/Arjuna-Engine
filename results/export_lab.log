@@ -1,0 +1,31 @@
+CAS R=0.9: 7q, 52 ops, k=20, ADAPT matches pes.json (12.8s)
+CAS R=1.0: 7q, 50 ops, k=19, ADAPT matches pes.json (12.3s)
+CAS R=1.098: 7q, 53 ops, k=20, ADAPT matches pes.json (12.7s)
+CAS R=1.2: 7q, 57 ops, k=21, ADAPT matches pes.json (12.6s)
+CAS R=1.35: 7q, 54 ops, k=26, ADAPT matches pes.json (11.3s)
+CAS R=1.5: 7q, 56 ops, k=29, ADAPT matches pes.json (10.2s)
+CAS R=1.7: 7q, 55 ops, k=33, ADAPT matches pes.json (9.4s)
+CAS R=1.9: 7q, 55 ops, k=40, ADAPT matches pes.json (9.9s)
+CAS R=2.1: 7q, 51 ops, k=35, ADAPT matches pes.json (8.0s)
+CAS R=2.4: 7q, 51 ops, k=37, ADAPT matches pes.json (7.7s)
+CAS R=2.7: 7q, 48 ops, k=37, ADAPT matches pes.json (7.0s)
+CAS R=3.0: 7q, 38 ops, k=33, ADAPT matches pes.json (3.6s)
+FV curve R=0.9 done
+FV curve R=1.0 done
+FV curve R=1.098 done
+FV curve R=1.2 done
+FV curve R=1.35 done
+FV curve R=1.5 done
+FV curve R=1.7 done
+FV curve R=1.9 done
+FV curve R=2.1 done
+FV curve R=2.4 done
+FV curve R=2.7 done
+FV curve R=3.0 done
+FV R=1.098: 11q, 8 ops (3.5s)
+FV R=1.7: 11q, 8 ops (3.5s)
+FV R=2.1: 11q, 8 ops (3.5s)
+noise refs R=1.098 done
+noise refs R=2.1 done
+subspace refs done
+saved /home/claude/qc02/results/lab_data.json (1.06 MB) in 271s

@@ -1,0 +1,27 @@
+R=2.1 K= 8 (  2% of space): noisy 98.44  clean 21.13  random 538.32  HF-ranked 213.28 mHa
+R=2.1 K=12 (  5% of space): noisy 20.90  clean undefined  random 418.40  HF-ranked 208.08 mHa
+R=2.1 K=16 (  8% of space): noisy 19.18  clean undefined  random 391.25  HF-ranked 190.02 mHa
+R=2.1 K=20 ( 13% of space): noisy 14.96  clean undefined  random 301.63  HF-ranked 135.33 mHa
+R=2.1 K=24 ( 18% of space): noisy 12.77  clean undefined  random 271.05  HF-ranked 135.19 mHa
+R=2.1 K=28 ( 25% of space): noisy 9.31  clean undefined  random 227.29  HF-ranked 113.00 mHa
+R=2.1 K=32 ( 33% of space): noisy 7.26  clean undefined  random 160.85  HF-ranked 92.00 mHa
+R=2.1 K=36 ( 41% of space): noisy 5.62  clean undefined  random 140.75  HF-ranked 90.60 mHa
+R=2.1 K=40 ( 51% of space): noisy 5.60  clean undefined  random 116.79  HF-ranked 50.61 mHa
+R=2.1 K=44 ( 62% of space): noisy 1.56  clean undefined  random 85.41  HF-ranked 22.50 mHa
+R=2.1 K=48 ( 73% of space): noisy 1.01  clean undefined  random 61.32  HF-ranked 1.74 mHa
+R=2.1 K=52 ( 86% of space): noisy 0.33  clean undefined  random 7.08  HF-ranked 0.25 mHa
+R=2.1 K=56 (100% of space): noisy -0.00  clean undefined  random -0.00  HF-ranked -0.00 mHa
+R=1.098 K= 8 (  2% of space): noisy 47.21  clean undefined  random 944.09  HF-ranked 58.91 mHa
+R=1.098 K=12 (  5% of space): noisy 34.49  clean undefined  random 811.95  HF-ranked 42.42 mHa
+R=1.098 K=16 (  8% of space): noisy 28.23  clean undefined  random 806.10  HF-ranked 22.44 mHa
+R=1.098 K=20 ( 13% of space): noisy 25.27  clean undefined  random 115.50  HF-ranked 21.86 mHa
+R=1.098 K=24 ( 18% of space): noisy 23.59  clean undefined  random 93.63  HF-ranked 13.69 mHa
+R=1.098 K=28 ( 25% of space): noisy 22.83  clean undefined  random 40.32  HF-ranked 9.69 mHa
+R=1.098 K=32 ( 33% of space): noisy 10.69  clean undefined  random 20.99  HF-ranked 9.35 mHa
+R=1.098 K=36 ( 41% of space): noisy 8.29  clean undefined  random 18.20  HF-ranked 7.76 mHa
+R=1.098 K=40 ( 51% of space): noisy 4.21  clean undefined  random 13.30  HF-ranked 3.77 mHa
+R=1.098 K=44 ( 62% of space): noisy 2.09  clean undefined  random 8.30  HF-ranked 2.03 mHa
+R=1.098 K=48 ( 73% of space): noisy 1.63  clean undefined  random 6.92  HF-ranked 0.59 mHa
+R=1.098 K=52 ( 86% of space): noisy 0.19  clean undefined  random 2.47  HF-ranked 0.51 mHa
+R=1.098 K=56 (100% of space): noisy undefined  clean undefined  random 0.00  HF-ranked 0.00 mHa
+saved results/sqd_capped.json

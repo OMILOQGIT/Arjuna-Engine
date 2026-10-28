@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Breaking N≡N · Team Arjuna</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@300;400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a 1600x900 physicist's blackboard scaled to fit; every drawing is chalk-sketched in code; slides change through an atom whose electrons burst outward and open the next board. Deliberately single-theme (blackboard). */
+:root {
+  --board: #17202b;      /* slate blackboard */
+  --board-2: #1d2733;    /* raised chalk panels */
+  --chalk: #eef1ea;      /* white chalk */
+  --dim: #c7cfd8;        /* body chalk */
+  --faint: #7d8a99;      /* rubbed-out chalk */
+  --cyan: #7fdde4;       /* quantum, our method */
+  --pink: #ff93ba;       /* electrons, highlights */
+  --yellow: #ffd977;     /* plain-words notes */
+  --orange: #ffb067;     /* classical methods */
+  --green: #9fe7a4;      /* verified / pass */
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive;
+  --text: "Kalam", "Segoe Print", "Chalkboard SE", "Comic Sans MS", cursive;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; background: #0d131a; color: var(--chalk); font-family: var(--text); overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0; box-sizing: border-box;
+}
+#viewport { width: 100%; height: 100%; display: grid; place-items: center; }
+#stage {
+  position: relative; width: 1600px; height: 900px; flex: none; transform-origin: center;
+  background: var(--board); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 0 0 10px #3b2a1e, 0 0 0 12px #241912, 0 30px 80px rgba(0,0,0,.6);
+}
+#dust, #fx { position: absolute; inset: 0; width: 1600px; height: 900px; pointer-events: none; }
+#fx { z-index: 6; }
+
+.slide {
+  position: absolute; inset: 0; box-sizing: border-box; padding: 54px 84px 108px;
+  display: flex; flex-direction: column; gap: 18px;
+  visibility: hidden; opacity: 0;
+  transition: opacity .45s ease, filter .45s ease, transform .5s ease;
+}
+.slide.on { visibility: visible; opacity: 1; }
+.slide.dim { filter: blur(2.5px) brightness(.55); transform: scale(.97); }
+
+.kicker { font-family: var(--text); font-size: 19px; letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); display: flex; gap: 16px; align-items: baseline; }
+.kicker b { color: var(--faint); font-weight: 400; letter-spacing: .06em; text-transform: none; }
+h1, h2 { font-family: var(--hand); font-weight: 700; margin: 0; line-height: 1; text-wrap: balance; letter-spacing: .005em; }
+h2 { font-size: 66px; max-width: 1380px; }
+.hl { color: var(--cyan); }
+.hp { color: var(--pink); }
+.ho { color: var(--orange); }
+.hy { color: var(--yellow); }
+.hg { color: var(--green); }
+.u { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M2 8 C 30 3, 60 11, 95 6 S 160 3, 198 7' fill='none' stroke='%23ff93ba' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 100% 12px no-repeat; padding-bottom: 8px; }
+p { margin: 0; }
+.txt { font-size: 23px; line-height: 1.45; color: var(--dim); font-weight: 300; }
+.txt b, .txt strong { color: var(--chalk); font-weight: 400; }
+.sm { font-size: 18px; line-height: 1.4; color: var(--faint); font-weight: 300; }
+.mono { font-family: var(--mono); font-size: .82em; color: var(--chalk); }
+.row { display: flex; gap: 40px; flex: 1; min-height: 0; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* note boxes: borders are chalk-sketched by script (data-sk) */
+.note { position: relative; padding: 16px 20px 16px; }
+.note .lab { font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; display: block; margin-bottom: 6px; }
+.plain .lab { color: var(--yellow); }
+.deep .lab { color: var(--cyan); }
+.deep { font-size: 18.5px; line-height: 1.45; color: var(--dim); font-weight: 300; }
+.deep b { color: var(--chalk); font-weight: 400; }
+.skb { position: absolute; left: -6px; top: -6px; overflow: visible; pointer-events: none; }
+
+.big { font-family: var(--hand); font-weight: 700; font-size: 74px; line-height: .95; font-variant-numeric: tabular-nums; }
+.big small { font-size: 30px; color: var(--faint); margin-left: 6px; font-weight: 500; }
+.stat .k { font-size: 18px; color: var(--dim); line-height: 1.35; font-weight: 300; }
+
+svg.d { display: block; overflow: visible; }
+svg.d text { font-family: var(--text); fill: var(--dim); }
+.ink { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.slide.on .ink { animation: ink .75s cubic-bezier(.45,.05,.3,1) forwards; }
+@keyframes ink { to { stroke-dashoffset: 0; } }
+.fade { opacity: 0; }
+.slide.on .fade { animation: fadeIn .55s ease forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.slide .rv { opacity: 0; transform: translateY(10px); }
+.slide.on .rv { animation: rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+.spin { transform-box: view-box; animation: spin var(--t, 9s) linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* jargon with a chalk definition on hover/focus */
+.term { border-bottom: 2px dotted var(--faint); cursor: help; position: relative; outline: none; }
+.term:hover::after, .term:focus::after {
+  content: attr(data-def); position: absolute; left: 0; bottom: calc(100% + 10px); z-index: 20;
+  width: 360px; padding: 12px 14px; background: #0f161e; border: 2px solid var(--yellow); border-radius: 10px 14px 9px 13px;
+  font: 300 17px/1.4 var(--text); color: var(--chalk); text-transform: none; letter-spacing: 0; white-space: normal;
+}
+
+/* flow cards */
+.cards { position: relative; display: grid; gap: 34px 44px; }
+.card { position: relative; padding: 14px 18px 14px; display: flex; flex-direction: column; gap: 5px; }
+.card .n { font-family: var(--hand); font-size: 26px; color: var(--pink); line-height: 1; font-weight: 700; }
+.card h3 { margin: 0; font-family: var(--hand); font-size: 36px; line-height: 1; font-weight: 700; color: var(--chalk); }
+.card .m { font-size: 18px; line-height: 1.35; color: var(--dim); font-weight: 300; }
+.card .t { font-family: var(--mono); font-size: 14.5px; color: var(--cyan); }
+.card .v { font-family: var(--hand); font-size: 25px; color: var(--yellow); line-height: 1.05; margin-top: auto; }
+.overlay { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+
+/* stack */
+.stack { display: grid; grid-template-columns: 190px 1fr 1fr; gap: 14px 46px; position: relative; flex: 1; }
+.stack .lay { font-family: var(--hand); font-size: 30px; font-weight: 700; line-height: 1; color: var(--yellow); display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.stack .lay span { font-family: var(--text); font-size: 14.5px; color: var(--faint); font-weight: 300; line-height: 1.3; }
+.stack .box { position: relative; padding: 9px 14px; font-size: 17px; line-height: 1.33; color: var(--dim); font-weight: 300; display: block; align-self: center; }
+.stack .box b { color: var(--chalk); font-weight: 400; }
+.stack .box .mono { font-size: 13.5px; color: var(--green); display: block; margin-top: 3px; }
+.stack .head { font-family: var(--hand); font-size: 32px; font-weight: 700; line-height: 1; display: flex; flex-direction: column; gap: 4px; }
+
+/* chrome */
+#chrome { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; display: flex; align-items: center; gap: 18px; padding: 0 40px; z-index: 8; pointer-events: none; }
+#chrome > * { pointer-events: auto; }
+.nav { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--faint); background: transparent; color: var(--chalk); font: 700 24px/1 var(--hand); cursor: pointer; display: grid; place-items: center; transition: border-color .2s, color .2s; }
+.nav:hover { border-color: var(--cyan); color: var(--cyan); }
+#dots { display: flex; gap: 9px; align-items: center; }
+#dots button { width: 12px; height: 12px; padding: 0; border-radius: 50%; border: 2px solid var(--faint); background: transparent; cursor: pointer; transition: transform .25s, background .25s, border-color .25s; }
+#dots button[aria-current="true"] { background: var(--pink); border-color: var(--pink); transform: scale(1.3); }
+#help { font: 300 16px var(--text); color: var(--faint); }
+button:focus-visible, .term:focus-visible { outline: 2px dashed var(--yellow); outline-offset: 4px; }
+#tile { margin-left: auto; position: relative; min-width: 190px; padding-right: 8px; height: 70px; display: flex; align-items: center; gap: 12px; }
+#tile svg { flex: none; }
+#tile .el { display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; }
+#tile .z { font: 500 15px var(--mono); color: var(--faint); grid-column: 1; }
+#tile .sym { font: 700 42px/1 var(--hand); color: var(--chalk); grid-column: 2; grid-row: 1 / 3; }
+#tile .nm { font: 300 14px var(--text); color: var(--faint); grid-column: 1; }
+
+#notes {
+  position: absolute; left: 40px; right: 40px; bottom: 92px; z-index: 9; padding: 18px 24px 20px;
+  background: rgba(13,19,26,.95); border: 2px solid var(--yellow); border-radius: 14px 10px 16px 12px;
+  font: 300 21px/1.5 var(--text); color: var(--chalk); max-height: 300px; overflow: auto;
+}
+#notes h4 { margin: 0 0 6px; font: 700 26px var(--hand); color: var(--yellow); }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide.on .ink, .slide.on .fade, .slide.on .rv { animation: none !important; transition: none !important; }
+  .ink { stroke-dashoffset: 0; } .fade, .slide .rv { opacity: 1; transform: none; }
+  .spin { animation: none; }
+}
+
+html, body { margin: 0; height: 100%; }
+#viewport { position: fixed; inset: 0; overflow: hidden; display: block !important; }
+#stage { position: absolute !important; left: 50%; top: 50%; transform-origin: center center; }
+@media (orientation: portrait) and (max-width: 700px) {
+  body::after { content: "Turn your phone sideways for a bigger view"; position: fixed; left: 0; right: 0; bottom: max(24px, env(safe-area-inset-bottom, 0px)); text-align: center; color: #7d8a99; font: 15px system-ui, sans-serif; }
+}
+</style>
+</head>
+<body>
+
+
+<div id="viewport">
+<div id="stage" role="region" aria-roledescription="slide deck" aria-label="Breaking N≡N, Team Arjuna">
+<canvas id="dust" width="1600" height="900" aria-hidden="true"></canvas>
+
+<!-- 1 · H · TITLE -->
+<section class="slide" data-el="1" data-sym="H" data-name="Hydrogen" data-tag="Title">
+  <div class="kicker rv" style="animation-delay:.1s">Chakravyuh hackathon <b>· problem statement QC-02 · flagship</b></div>
+  <div class="row" style="align-items:center;gap:20px">
+    <div class="col" style="width:760px;gap:26px">
+      <h1 class="rv" style="font-size:150px;animation-delay:.25s">Breaking <span class="hl">N≡N</span></h1>
+      <p class="txt rv" style="font-size:30px;line-height:1.35;animation-delay:.45s">How a quantum computer gets the <b>hardest bond in chemistry</b> right where the classical gold standard breaks down, and what noise does to it.</p>
+      <div class="rv" style="animation-delay:.7s;display:flex;align-items:center;gap:22px;margin-top:18px">
+        <svg class="d" id="bow" width="96" height="96" viewBox="0 0 96 96"></svg>
+        <div><div style="font:700 56px/1 var(--hand);color:var(--yellow)">Team Arjuna</div><div class="sm" style="margin-top:6px">One arrow, aimed at one number: 1.6 milli-hartree</div></div>
+      </div>
+    </div>
+    <svg class="d" id="title-art" width="720" height="600" viewBox="0 0 720 600" aria-label="Sketch of a nitrogen molecule whose triple bond is pierced by an arrow"></svg>
+  </div>
+  <p class="sm rv" style="animation-delay:1s">Press → or click to move · N for speaker notes · F for fullscreen · hover dotted words for definitions</p>
+</section>
+
+<!-- 3 · Li · PROBLEM -->
+<section class="slide" data-el="2" data-sym="He" data-name="Helium" data-tag="The problem">
+  <div class="kicker rv">Chapter 1 · the problem <b>· why nitrogen</b></div>
+  <h2 class="rv" style="animation-delay:.15s">Nitrogen feeds the world, but its <span class="u">triple bond</span> fights back</h2>
+  <svg class="d" id="haber" width="1430" height="250" viewBox="0 0 1430 250" aria-label="Flowchart from air to food via ammonia"></svg>
+  <div class="row" style="gap:36px">
+    <div class="note plain" data-sk="yellow" style="flex:1.15"><span class="lab">In plain words</span>
+      <p class="txt" style="font-size:21px">Plants can't use nitrogen until the N≡N bond is broken. Factories do it hot and under pressure, using <b>1–2% of all the energy humanity consumes</b>. An enzyme does it at room temperature. To design catalysts like it, we must <b>calculate bond-breaking energies very precisely</b>.</p></div>
+    <div class="note deep" data-sk="cyan" style="flex:1"><span class="lab">Under the hood</span>
+      <p>Target: <span class="term" tabindex="0" data-def="The error budget chemists accept: 1 kcal/mol, which is about 1.6 thousandths of a hartree (the atomic unit of energy).">chemical accuracy</span> = 1 kcal/mol ≈ <b>1.6 mHa</b>. Why so strict: reaction rates go as <span class="mono">k ∝ e^(−ΔG/RT)</span>, so at room temperature a 1.4 kcal/mol error is already a <b>10× error in the predicted rate</b>. The N≡N bond takes ≈ 945 kJ/mol to break, one of the strongest in chemistry.</p></div>
+    <div class="col" style="width:250px;justify-content:center">
+      <div class="stat rv" style="animation-delay:.9s"><div class="big hp">1.6<small>mHa</small></div><div class="k">the accuracy we have to hit, at every bond length</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · Be · WHY HARD -->
+<section class="slide" data-el="3" data-sym="Li" data-name="Lithium" data-tag="Why it's hard">
+  <div class="kicker rv">Chapter 1 · the problem <b>· why computers choke</b></div>
+  <h2 class="rv" style="animation-delay:.15s">Electrons move as a <span class="hp">crowd</span>, so the work <span class="u">explodes</span></h2>
+  <div class="row" style="gap:36px">
+    <div class="col" style="width:700px">
+      <svg class="d" id="wall" width="700" height="330" viewBox="0 0 700 330" aria-label="Log-scale bar chart of electron arrangements to track"></svg>
+      <div class="note plain" data-sk="yellow"><span class="lab">In plain words</span><p class="txt">Every electron reacts to every other one, so you can't solve them one at a time. An exact answer has to track <b>every way the electrons can sit in the orbitals</b>. Add a few orbitals and the count leaves Earth.</p></div>
+    </div>
+    <div class="col" style="flex:1">
+      <svg class="d" id="pies" width="690" height="300" viewBox="0 0 690 300" aria-label="Two pie charts: at rest one arrangement holds 93 percent, stretched only 20 percent"></svg>
+      <div class="note deep" data-sk="cyan"><span class="lab">Under the hood</span><p>At rest, the <span class="term" tabindex="0" data-def="Hartree–Fock: the best single arrangement of electrons, each feeling only the average of the others.">Hartree–Fock</span> arrangement carries <b>92.6%</b> of the exact wavefunction. At 2.1 Å it carries <b>19.6%</b> and 24 arrangements each hold over 1%. This is <span class="term" tabindex="0" data-def="When several electron arrangements matter at once, so no single-arrangement method can describe the molecule.">static correlation</span>. Count = C(n, n<sub>α</sub>)·C(n, n<sub>β</sub>) determinants; qubits = 2 × orbitals.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · B · GOLD STANDARD -->
+<section class="slide" data-el="4" data-sym="Be" data-name="Beryllium" data-tag="The gold standard fails">
+  <div class="kicker rv">Chapter 1 · the problem <b>· the evidence</b></div>
+  <h2 class="rv" style="animation-delay:.15s">The <span class="ho">"gold standard"</span> drifts off target, then <span class="u">collapses</span></h2>
+  <div class="row" style="gap:34px">
+    <div class="col" style="width:520px">
+      <svg class="d" id="curve" width="520" height="270" viewBox="0 0 520 270" aria-label="Explainer of a bond energy curve"></svg>
+      <div class="note plain" data-sk="yellow"><span class="lab">In plain words</span><p class="txt">Pull the two atoms apart and plot the energy: that's the curve above. <b>CCSD(T)</b> is the method chemists trust most. It assumes one arrangement dominates, so as the bond stretches it drifts off target, then <b>falls below the true energy</b>, which no correct method can do.</p></div>
+    </div>
+    <div class="col" style="flex:1">
+      <svg class="d" id="ccerr" width="860" height="440" viewBox="0 0 860 440" aria-label="CCSD(T) error versus bond length on a log scale"></svg>
+      <p class="sm">10 electrons in 8 valence orbitals (11 qubits after tapering), N₂/STO-3G, same Hamiltonian for every method; errors against exact diagonalisation. Multireference classical methods also handle this size: the point is where single-reference methods break.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · C · QUANTUM 101 -->
+<section class="slide" data-el="5" data-sym="B" data-name="Boron" data-tag="Quantum in 60 seconds">
+  <div class="kicker rv">Chapter 2 · the idea <b>· quantum in 60 seconds</b></div>
+  <h2 class="rv" style="animation-delay:.15s">A qubit can be <span class="hl">"electron here"</span> and <span class="hl">"not here"</span> at the same time</h2>
+  <svg class="d" id="q101" width="1188" height="332" viewBox="0 0 1430 400" style="align-self:center" aria-label="Three panels: bit versus qubit, orbitals as qubits, a blend of arrangements"></svg>
+  <div class="row" style="gap:36px">
+    <div class="note plain" data-sk="yellow" style="flex:1.1"><span class="lab">In plain words</span><p class="txt" style="font-size:21px">Give every electron slot its own qubit: <b>1 = electron there, 0 = empty</b>. Twelve qubits hold a weighted blend of all 4,096 on/off patterns at once, the same crowd we just met. The chip stores it natively; a laptop has to list it.</p></div>
+    <div class="note deep" data-sk="cyan" style="flex:1"><span class="lab">Under the hood</span><p>n qubits carry 2ⁿ complex amplitudes. <span class="term" tabindex="0" data-def="Qubits whose states are linked, so the whole cannot be described one qubit at a time.">Entanglement</span> links slots so the blend can't be split qubit by qubit. Each measurement returns one bitstring with probability |amplitude|²; energies are averages over many repeats (<span class="term" tabindex="0" data-def="One run of the circuit followed by a measurement. Averages need thousands of shots.">shots</span>).</p></div>
+  </div>
+</section>
+
+<!-- 7 · N · SOLUTION MAP -->
+<section class="slide" data-el="6" data-sym="C" data-name="Carbon" data-tag="Our solution">
+  <div class="kicker rv">Chapter 3 · our solution <b>· the map</b></div>
+  <h2 class="rv" style="animation-delay:.15s">Seven steps from a <span class="hy">molecule</span> to a <span class="hl">trustworthy number</span></h2>
+  <div class="cards" id="flow" style="grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;flex:1">
+    <div class="card" data-sk="chalk" style="grid-area:1/1"><span class="n">1</span><h3>Rough sketch</h3><p class="m">Average picture of all electrons</p><span class="t">Hartree–Fock</span><span class="v">matches textbook to 10⁻¹³</span></div>
+    <div class="card" data-sk="chalk" style="grid-area:1/2"><span class="n">2</span><h3>Zoom in</h3><p class="m">Keep the 6 orbitals that make and break the bond</p><span class="t">active space CAS(6e,6o)</span><span class="v">12 qubits</span></div>
+    <div class="card" data-sk="chalk" style="grid-area:1/3"><span class="n">3</span><h3>Translate</h3><p class="m">Rewrite electron rules as qubit rules</p><span class="t">Jordan–Wigner mapping</span><span class="v">247 Pauli terms</span></div>
+    <div class="card" data-sk="chalk" style="grid-area:1/4"><span class="n">4</span><h3>Shrink</h3><p class="m">Delete qubits symmetry already knows</p><span class="t">Z₂ qubit tapering</span><span class="v">12 → 7 qubits</span></div>
+    <div class="card" data-sk="cyan" style="grid-area:2/4"><span class="n">5</span><h3>Build &amp; tune</h3><p class="m">Grow the circuit one brick at a time, tune its knobs</p><span class="t">ADAPT-VQE</span><span class="v">1.6 mHa at 12/12 lengths</span></div>
+    <div class="card" data-sk="orange" style="grid-area:2/3"><span class="n">6</span><h3>Stress test</h3><p class="m">Add realistic hardware noise and fixes</p><span class="t">noise model · ZNE · PEC</span><span class="v">breaks at today's noise</span></div>
+    <div class="card" data-sk="green" style="grid-area:2/2"><span class="n">7</span><h3>Rescue</h3><p class="m">Use the noisy chip as a sampler, solve the rest exactly</p><span class="t">SQD</span><span class="v">24× better than random picks</span></div>
+    <div class="card" style="grid-area:2/1;justify-content:center"><p class="txt" style="font-size:21px">Every step is checked against a <b>published or exact number</b> before the next one runs.</p></div>
+  </div>
+</section>
+
+<!-- 8 · O · ZOOM TRANSLATE SHRINK -->
+<section class="slide" data-el="7" data-sym="N" data-name="Nitrogen" data-tag="Zoom, translate, shrink">
+  <div class="kicker rv">Chapter 3 · our solution <b>· steps 2 → 4 · element 7 gets nitrogen's own orbitals</b></div>
+  <h2 class="rv" style="animation-delay:.15s">Spend qubits only <span class="u">where the action is</span></h2>
+  <div class="row" style="gap:28px">
+    <svg class="d" id="ladder" width="382" height="400" viewBox="0 0 420 440" aria-label="Orbital energy ladder with the six active orbitals highlighted"></svg>
+    <svg class="d" id="jw" width="300" height="400" viewBox="0 0 330 440" aria-label="Jordan–Wigner translation sketch"></svg>
+    <svg class="d" id="taper" width="640" height="400" viewBox="0 0 700 440" aria-label="Twelve qubit wires, five removed by symmetry"></svg>
+  </div>
+  <div class="row" style="gap:30px;flex:none">
+    <div class="note plain" data-sk="yellow" style="flex:1"><span class="lab">In plain words</span><p class="txt" style="font-size:20px">Only six orbitals really take part in the bond: keep those, freeze the rest. Translate, then <b>delete five qubits whose values symmetry already fixes</b>. Same answer, half the gates.</p></div>
+    <div class="note deep" data-sk="cyan" style="flex:1"><span class="lab">Under the hood</span><p>Active space on a frozen mean-field core (CASCI), the simplest embedding. <span class="mono">a†ₚ = Z₀…Zₚ₋₁ (Xₚ − iYₚ)/2</span>. Five commuting Z₂ symmetries → Clifford rotation → fixed X eigenvalues (Bravyi et al., 2017). CNOTs 1,856 → 888; operator pool 117 → 27.</p></div>
+  </div>
+</section>
+
+<!-- 9 · F · ADAPT-VQE -->
+<section class="slide" data-el="8" data-sym="O" data-name="Oxygen" data-tag="ADAPT-VQE">
+  <div class="kicker rv">Chapter 3 · our solution <b>· step 5</b></div>
+  <h2 class="rv" style="animation-delay:.15s">ADAPT-VQE: a game of <span class="hp">hot and cold</span>, one brick at a time</h2>
+  <div class="row" style="gap:30px">
+    <div class="col" style="width:600px">
+      <svg class="d" id="loop" width="600" height="340" viewBox="0 0 600 340" aria-label="Flowchart of the ADAPT-VQE loop"></svg>
+      <div class="note plain" data-sk="yellow"><span class="lab">In plain words</span><p class="txt" style="font-size:21px">The chip prepares a guess and measures its energy. A normal computer turns the knobs. <b>Lower energy always means a better guess</b>, a law of quantum mechanics. ADAPT adds the one brick that helps most, then repeats.</p></div>
+    </div>
+    <div class="col" style="flex:1;gap:8px">
+      <svg class="d" id="pes" width="800" height="300" viewBox="0 0 800 300" aria-label="Energy curve with ADAPT-VQE points on the exact line"></svg>
+      <svg class="d" id="conv" width="800" height="210" viewBox="0 0 800 210" aria-label="ADAPT error shrinking as bricks are added"></svg>
+      <p class="sm" style="font-size:16.5px">Variational principle E(θ) ≥ E₀ · bricks chosen by the largest energy gradient ⟨ψ|[H, A<sub>k</sub>]|ψ⟩ from 27 symmetry-allowed excitations · knobs tuned by BFGS with exact gradients · spin penalty keeps the singlet · noiseless simulation (Grimsley et al., 2019)</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · Ne · NOISE + SQD -->
+<section class="slide" data-el="9" data-sym="F" data-name="Fluorine" data-tag="Noise and rescue">
+  <div class="kicker rv">Chapter 3 · our solution <b>· steps 6 and 7</b></div>
+  <h2 class="rv" style="animation-delay:.15s"><span class="ho">Plot twist:</span> noise wrecks it. <span class="hg">The rescue:</span> SQD</h2>
+  <div class="row" style="gap:44px">
+    <div class="col" style="flex:1">
+      <p class="txt" style="font-size:21px">Real qubits slip roughly <b>once per 300–1,000 two-qubit gates</b>. Our accurate circuit has 1,048–1,792 of them, so the answer drowns. We tried every standard fix: correcting readout, <span class="term" tabindex="0" data-def="Zero-noise extrapolation: run at 1×, 3× and 5× the noise, then draw the trend back to zero noise.">ZNE</span> and <span class="term" tabindex="0" data-def="Probabilistic error cancellation: undo noise on average by running random corrected circuits. Unbiased, but the number of repeats explodes.">PEC</span>.</p>
+      <svg class="d" id="sweep" width="700" height="300" viewBox="0 0 700 300" aria-label="Energy error versus two-qubit gate error"></svg>
+      <div class="note deep" data-sk="orange"><p style="font-size:17.5px">At 3 × 10⁻³ gate error: still <b>1.1+ Ha</b> off after readout fix + ZNE. PEC is unbiased but needs <b>10¹³–10¹⁸ shots</b> per term. Amplifying every gate's noise, ZNE reaches 1.6 mHa only below <b>~3 × 10⁻⁵–10⁻⁴</b>: gates <b>30–100× better</b> than today.</p></div>
+    </div>
+    <div class="col" style="flex:1">
+      <p class="txt" style="font-size:21px">So we change the chip's job: it only <b>points at the arrangements that matter</b>, and a normal computer solves exactly inside them. The fair test is a fixed budget: does the chip pick better arrangements than chance?</p>
+      <svg class="d" id="sqd" width="700" height="300" viewBox="0 0 700 300" aria-label="SQD error versus number of shots"></svg>
+      <div class="note deep" data-sk="green"><p style="font-size:17.5px">11 qubits, 2.1 Å, 192-CNOT circuit at today's noise, 3,000 shots, 10 seeds. Solving exactly in <b>25%</b> of the space: chip-picked arrangements are <b>9 mHa</b> off, random picks <b>227 mHa</b> (24× worse), a simple classical ranking <b>113 mHa</b>. At equilibrium, where one arrangement dominates, the classical ranking wins; the chip helps where the bond is stretched. Without a budget, random bitstrings cover this small space in ~300 shots, so real advantage needs bigger spaces (IBM ran SQD on N₂ with 58 qubits).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · Na · STACK -->
+<section class="slide" data-el="10" data-sym="Ne" data-name="Neon" data-tag="Tech stack">
+  <div class="kicker rv">Chapter 4 · the build <b>· tech stack</b></div>
+  <h2 class="rv" style="animation-delay:.15s">Our stack: <span class="hg">verified prototype</span> → <span class="hl">production tools</span></h2>
+  <div class="stack" id="stack">
+    <div></div>
+    <div class="head hg">Prototype · running today <span class="sm" style="font-family:var(--text);font-size:15px">Python + NumPy/SciPy, written and checked by us</span></div>
+    <div class="head hl">Production · integrating now <span class="sm" style="font-family:var(--text);font-size:15px">same role, bigger molecules, real hardware</span></div>
+
+    <div class="lay">Chemistry<span>geometry → integrals h, g</span></div>
+    <div class="box" data-sk="green"><b>Own Gaussian integrals, Hartree–Fock, CCSD(T), exact solver</b><span class="mono">integrals.py · scf.py · ccsd.py</span></div>
+    <div class="box" data-sk="cyan"><b>PySCF</b> for cc-pVDZ basis, CASSCF orbitals, CCSD(T) · <b>block2</b> DMRG as the reference for big active spaces</div>
+
+    <div class="lay">Translate<span>→ Hamiltonian as a sum of Pauli strings</span></div>
+    <div class="box" data-sk="green"><b>Jordan–Wigner mapping + Z₂ tapering</b><span class="mono">pauli.py · taper.py</span></div>
+    <div class="box" data-sk="cyan"><b>qiskit-nature 0.8</b> JordanWignerMapper + tapered mapper → <b>SparsePauliOp</b></div>
+
+    <div class="lay">Algorithms<span>→ circuit (7 qubits, ~1k CNOTs)</span></div>
+    <div class="box" data-sk="green"><b>ADAPT-VQE</b> with exact gradients + BFGS · <b>SQD</b> teaching version<span class="mono">adapt.py · sqd.py</span></div>
+    <div class="box" data-sk="cyan"><b>Qiskit 2.x</b> circuits + transpiler · <b>qiskit-addon-sqd</b> (IBM's SQD) · our ADAPT engine kept as the optimiser</div>
+
+    <div class="lay">Run &amp; noise<span>→ measured bitstrings and energies</span></div>
+    <div class="box" data-sk="green"><b>Density-matrix noise simulator</b>, readout fix, ZNE, PEC cost model<span class="mono">noise.py</span></div>
+    <div class="box" data-sk="cyan"><b>Qiskit Aer</b> with IBM backend noise · <b>qiskit-ibm-runtime</b> Estimator/Sampler, TREX · ZNE · PEC · DD · <b>IBM Heron</b> via Open Plan · <b>mitiq</b> cross-check</div>
+
+    <div class="lay">Show &amp; prove<span>→ energy ± error, on screen</span></div>
+    <div class="box" data-sk="green"><b>14 Python + 52 engine checks</b> against published numbers · figures · JSON results<span class="mono">tests/ · results/</span></div>
+    <div class="box" data-sk="cyan"><b>pytest</b> in GitHub Actions · <b>Streamlit + Plotly</b> dashboard · <b>Google Colab</b> for compute</div>
+  </div>
+</section>
+
+<!-- 12 · Mg · PROOF + NEXT -->
+<section class="slide" data-el="11" data-sym="Na" data-name="Sodium" data-tag="Proof and next steps">
+  <div class="kicker rv">Chapter 4 · the build <b>· proof and what comes next</b></div>
+  <h2 class="rv" style="animation-delay:.15s">What we've <span class="hg">proven</span>, and where it <span class="hl">goes next</span></h2>
+  <div class="row" style="gap:40px">
+    <div class="col" style="width:560px">
+      <svg class="d" id="checks" width="560" height="360" viewBox="0 0 560 360" aria-label="Checklist of verified components"></svg>
+      <div class="note deep" data-sk="orange"><span class="lab" style="color:var(--orange)">Limits we state up front</span><p>Prototype uses the minimal STO-3G basis, so exact answers are still classical. CNOT counts are upper bounds. No real-hardware run yet. Noise model is idealised (depolarising, all-to-all).</p></div>
+    </div>
+    <div class="col" style="flex:1">
+      <svg class="d" id="road" width="820" height="560" viewBox="0 0 820 560" aria-label="Roadmap from prototype to catalyst design"></svg>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · Al · THANK YOU -->
+<section class="slide" data-el="12" data-sym="Mg" data-name="Magnesium" data-tag="Thank you">
+  <div class="kicker rv">Team Arjuna <b>· Chakravyuh hackathon</b></div>
+  <div class="row" style="align-items:center">
+    <div class="col" style="width:720px;gap:22px">
+      <h1 class="rv" style="font-size:170px;animation-delay:.2s">Thank you</h1>
+      <p class="txt rv" style="font-size:30px;animation-delay:.4s">Questions are welcome. Ask us about <span class="hl">tapering</span>, <span class="hl">ADAPT</span>, <span class="ho">noise</span> or <span class="hg">SQD</span>.</p>
+      <div class="rv" style="display:flex;gap:46px;margin-top:20px;animation-delay:.6s">
+        <div class="stat"><div class="big hl">7<small>qubits</small></div><div class="k">from 12, exactly</div></div>
+        <div class="stat"><div class="big hp">12/12</div><div class="k">bond lengths within 1.6 mHa</div></div>
+        <div class="stat"><div class="big hg">24×</div><div class="k">better than random picks, stretched bond, same budget</div></div>
+      </div>
+    </div>
+    <svg class="d" id="end-art" width="640" height="520" viewBox="0 0 640 520" aria-label="The nitrogen molecule split into two atoms"></svg>
+  </div>
+</section>
+
+<canvas id="fx" width="1600" height="900" aria-hidden="true"></canvas>
+<div id="notes" hidden><h4 id="notes-h"></h4><div id="notes-b"></div></div>
+<div id="chrome">
+  <button class="nav" id="prev" aria-label="Previous slide">←</button>
+  <button class="nav" id="next" aria-label="Next slide">→</button>
+  <div id="dots" role="tablist" aria-label="Slides"></div>
+  <button class="nav" id="nbtn" aria-label="Toggle speaker notes" style="width:auto;padding:0 14px;border-radius:22px;font-size:20px">notes</button>
+  <span id="help"></span>
+  <div id="tile" aria-live="polite">
+    <svg id="bohr" width="70" height="70" viewBox="-35 -35 70 70" aria-hidden="true"></svg>
+    <div class="el"><span class="z" id="tz">1</span><span class="sym" id="ts">H</span><span class="nm" id="tn">Hydrogen</span></div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const DATA = {"pes":[{"r":0.9,"ex":-107.26714085153165,"hf":-107.1871903010402,"ad":-107.26713891449235,"k":20,"cx":896,"cxu":1920,"q":7,"cc":-107.26668860710082,"cct":-107.26668860710082},{"r":1.0,"ex":-107.52046127259567,"hf":-107.41953245168204,"ad":-107.5204612508945,"k":19,"cx":840,"cxu":1712,"q":7,"cc":-107.51948518478025,"cct":-107.51948518478025},{"r":1.098,"ex":-107.62201465586497,"hf":-107.49597503059111,"ad":-107.62201465257962,"k":20,"cx":888,"cxu":1856,"q":7,"cc":-107.62006755526433,"cct":-107.62006755526433},{"r":1.2,"ex":-107.64502412294509,"hf":-107.48778392804566,"ad":-107.6450241229452,"k":21,"cx":1048,"cxu":2032,"q":7,"cc":-107.64135603398044,"cct":-107.64135603398044},{"r":1.35,"ex":-107.6101555625705,"hf":-107.3976320996904,"ad":-107.61015556224703,"k":26,"cx":1320,"cxu":2576,"q":7,"cc":-107.60246161475818,"cct":-107.60246161475818},{"r":1.5,"ex":-107.55103503107689,"hf":-107.27244850120631,"ad":-107.55103503107104,"k":29,"cx":1456,"cxu":2832,"q":7,"cc":-107.5389494829198,"cct":-107.5389494829198},{"r":1.7,"ex":-107.48227278991378,"hf":-107.09901201240648,"ad":-107.48227278991388,"k":33,"cx":1640,"cxu":3088,"q":7,"cc":-107.47554198939329,"cct":-107.47554198939329},{"r":1.9,"ex":-107.44495831923723,"hf":-106.94123081630151,"ad":-107.4449583192372,"k":40,"cx":2112,"cxu":4000,"q":7,"cc":-107.49157657218274,"cct":-107.49157657218274},{"r":2.1,"ex":-107.43354566849071,"hf":-106.80841147580068,"ad":-107.43354565652459,"k":35,"cx":1728,"cxu":3616,"q":7,"cc":-107.56035910503962,"cct":-107.56035910503962},{"r":2.4,"ex":-107.43361524735418,"hf":-106.65660804847585,"ad":-107.43361521087226,"k":37,"cx":1840,"cxu":3968,"q":7,"cc":-107.68139144765875,"cct":-107.68139144765875},{"r":2.7,"ex":-107.4356657995974,"hf":-106.55114586871129,"ad":-107.43566578406438,"k":37,"cx":1752,"cxu":3744,"q":7,"cc":null,"cct":null},{"r":3.0,"ex":-107.4367199559893,"hf":-106.47984262283717,"ad":-107.43671984082832,"k":33,"cx":1672,"cxu":3648,"q":7,"cc":null,"cct":null}],"conv":{"cas66_1.098":[126.03963,89.54961,53.09418,45.68982,36.7061,31.77083,26.93553,23.54147,21.01549,18.50877,15.96887,13.77597,11.81517,9.90364,7.90266,6.20358,5.24181,4.08956,2.88996,1.7538,1.43725,1.12646,0.82087,0.45996,0.44658,0.43409,0.42041,0.40765,0.24749,0.23462,0.22575,0.21831,0.2135,0.20871,0.20037,0.19363,0.18879,0.17995,0.09338,0.07105,0.063,0.0258,0.02026,0.02,0.016,0.01086,0.01006,0.00799,0.00659,0.00647,0.00473,0.00431,0.00015,0.0],"fv108_1.098":[156.72876,120.23875,83.78332,80.90384,70.9465,58.5058,55.218,51.82099,48.35814,45.3489,42.28555,38.1141,34.11072,31.28799,28.3633,25.89429,23.34773,21.61778,19.78466,18.2054,16.54368,15.79541,15.06942,14.58032,13.95064,13.30291,12.65793,11.99441,10.63567,8.78407,8.42863,8.05875,7.71189,7.33338,6.99274,6.66397,6.31528,5.9529,5.14674,4.17425,3.71339,3.27591,3.15396,3.03243,2.81853,2.57842,2.46765,2.35699,2.24178,2.13979,2.13912,2.13842,2.13772,2.137,2.04784,1.99758,1.94914,1.92037,1.91233,1.85054,1.84182,1.77465,1.75918,1.75341,1.7426,1.72868,1.72056,1.63237,1.52735,1.47765,1.46634,1.44816,1.26683,1.24022,1.18957,1.02713,1.02609,0.9938,0.9737,0.96879,0.96679,0.95875,0.9545,0.94989,0.94967,0.92929,0.92492,0.88982,0.88373,0.87469,0.87206,0.86624,0.85548,0.84879,0.84523,0.83841,0.81852,0.78112,0.71577,0.70744,0.69067,0.68417,0.67753,0.66932,0.64199,0.63542,0.63252,0.61911,0.59668,0.59412,0.58023,0.57643,0.56318,0.54592,0.5411,0.54051,0.53882,0.53775,0.53591,0.53568,0.53278],"cas66_1.7":[383.26078,240.68995,98.28354,58.73221,55.03781,46.98173,43.52899,36.43005,33.73774,24.02952,22.83219,16.75827,15.18113,9.30348,8.42318,6.95606,5.80188,3.92672,3.69514,3.43136,3.21242,2.95758,2.85034,2.48709,2.45241,2.37201,2.33101,2.23819,1.99066,1.95986,1.70053,1.5692,1.26603,1.22566,1.12234,0.8254,0.76251,0.68261,0.62798,0.611,0.55915,0.48706,0.46616,0.24706,0.09104,0.04206,0.03842,0.03139,0.00209,0.00047,0.00013,3e-05,1e-05],"fv108_1.7":[409.61913,267.0483,124.64189,85.09056,81.77101,79.66736,76.73833,75.33613,71.8297,64.32462,61.01917,54.32409,52.90802,51.47978,49.93451,48.56325,47.25903,45.84923,42.71566,32.22373,31.50438,30.73583,29.98079,29.17396,27.95031,22.37483,21.89745,21.54481,20.73537,19.34095,18.37231,16.70393,13.96656,5.48941,5.36845,5.24909,5.08446,4.92435,4.85243,4.77143,4.575,4.38848,4.33006,4.26486,4.18245,3.91511,3.90569,3.89633,3.88848,3.88062,3.86935,3.84386,3.82992,3.79922,3.35629,3.19326,3.01081,2.95208,2.89408,2.88367,2.84242,2.79965,2.68677,2.65528,2.59661,2.42959,2.3833,2.2974,2.2808,2.24093,2.18906,2.10839,2.09772,2.08636,2.06274,2.04154,1.99985,1.97764,1.95849,1.93305,1.91613,1.90835,1.81749,1.78665,1.75746,1.74453,1.71957,1.66338,1.65645,1.56874,1.56222,1.55745,1.53283,1.49761,1.44997,1.44526,1.43388,1.40259,1.38156,1.35354,1.3185,1.30483,1.3027,1.29962,1.2907,1.24094,1.20879,1.15873,1.11591,1.10368,1.1001,1.09421,1.09337,1.08839,1.08109,0.99369,0.97215,0.96953,0.95531,0.92818,0.89785],"cas66_2.1":[625.13419,408.88361,192.55939,87.42877,86.71762,83.31911,81.98771,71.53442,70.62576,66.20805,65.51812,62.84713,61.64675,53.21506,52.5652,49.54539,48.69657,42.85108,41.65621,21.48776,20.65929,14.03758,5.51972,5.48675,5.32819,5.31262,5.26305,3.62592,3.58177,3.46952,3.4172,3.33249,3.28499,3.26615,3.17414,1.24821,0.78436,0.55322,0.41588,0.3768,0.26226,0.13299,0.09807,0.07147,0.03461,0.03424,0.02649,0.00659,0.00157,7e-05,5e-05,1e-05],"fv108_2.1":[640.19243,423.94185,207.61763,102.48701,100.32734,98.49736,97.35636,96.16245,95.72973,94.87581,91.32767,79.15978,78.26038,77.29643,74.21271,65.84641,65.11093,64.32022,63.6186,59.21415,58.85815,53.5467,32.94234,31.88682,25.99214,25.65244,24.98224,17.5136,17.23641,16.95458,16.79025,16.62238,10.32834,10.29132,10.24963,10.22252,10.19212,10.14911,9.71047,9.69812,9.67057,8.91774,8.87681,8.54428,8.51058,8.3672,8.02224,8.01671,7.93315,7.64616,7.59311,4.67911,4.10191,3.2594,2.89438,2.54862,2.28339,1.96992,1.88667,1.75954,1.68222,1.59439,1.53001,1.46113,1.41813,1.37256,1.32296,1.27393,1.2664,1.2293,1.21032,1.07862,1.04701,1.04419,1.041,0.97001,0.95826,0.84765,0.65501,0.64903,0.64361,0.64298,0.63366,0.62879,0.62828,0.62783,0.62704,0.62232,0.61617,0.61589,0.57526,0.56097,0.54599,0.53953,0.5392,0.53304,0.52786,0.51478,0.50762,0.4935,0.48663,0.48587,0.48269,0.48236,0.46214,0.44308,0.41994,0.40295,0.39223,0.36963,0.35622,0.34378,0.33541,0.32787,0.31877,0.3168,0.31419,0.31243,0.30822,0.30702,0.30568]},"noise":{"1.098":{"abl":{"raw":2511.0,"rem":2498.33,"rem+zne_lin":2343.47,"rem+zne_rich":2241.5,"rem+zne_exp":2456.8,"pec_mean":1.1},"sweep":[{"r2":1e-06,"rem":3.3871015751145706,"rich":0.45997451404389267,"exp":0.45996360074695986},{"r2":3e-06,"rem":9.230664111527176,"rich":0.46027891201561033,"exp":0.45998620839782234},{"r2":1e-05,"rem":29.57111652936817,"rich":0.4714248976114277,"exp":0.4608335384403972},{"r2":3e-05,"rem":86.73867477720876,"rich":0.751188243285128,"exp":0.48356924145309677},{"r2":0.0001,"rem":276.22233626485126,"rich":9.22130975847324,"exp":1.3439703893425303},{"r2":0.0003,"rem":737.3427596249229,"rich":136.38020888690505,"exp":24.30157537236255},{"r2":0.001,"rem":1718.3254480510614,"rich":1072.0572451977262,"exp":556.0885862296487},{"r2":0.003,"rem":2537.241568606277,"rich":2296.0246899297517,"exp":1810.4233389915266}],"cx":944,"g":2309.731520211559,"shots":4614739135687.755},"2.1":{"abl":{"raw":1305.75,"rem":1305.61,"rem+zne_lin":1304.3,"rem+zne_rich":1303.34,"rem+zne_exp":1305.38,"pec_mean":0.52},"sweep":[{"r2":1e-06,"rem":3.431319624027651,"rich":0.7843950432686597,"exp":0.784362893611501},{"r2":3e-06,"rem":8.707738366737772,"rich":0.7852628139914941,"exp":0.7844044716875942},{"r2":1e-05,"rem":26.99288681655787,"rich":0.8165279749761112,"exp":0.7859598559321057},{"r2":3e-05,"rem":77.70790449198728,"rich":1.5660256684810747,"exp":0.8274549093556516},{"r2":0.0001,"rem":238.64937893458205,"rich":21.099365973825,"exp":2.3618392212227945},{"r2":0.0003,"rem":583.965461101883,"rich":224.3334297619981,"exp":39.464128532941345},{"r2":0.001,"rem":1095.9116110326192,"rich":931.8691756659945,"exp":550.6997176703692},{"r2":0.003,"rem":1289.889057451802,"rich":1274.0987112974267,"exp":1142.7199094245138}],"cx":1616,"g":496933.65259464126,"shots":1.257906100633159e+17}},"sqd":[{"k":4,"cx":192,"shots":100,"dim":1024,"frac_good":0.53,"err_mHa":13.721,"vqe_noisy_err_mHa":1340.786,"vqe_ideal_err_mHa":100.327},{"k":4,"cx":192,"shots":300,"dim":1521,"frac_good":0.56,"err_mHa":12.759,"vqe_noisy_err_mHa":1340.786,"vqe_ideal_err_mHa":100.327},{"k":4,"cx":192,"shots":1000,"dim":2704,"frac_good":0.551,"err_mHa":0.491,"vqe_noisy_err_mHa":1340.786,"vqe_ideal_err_mHa":100.327},{"k":4,"cx":192,"shots":3000,"dim":2916,"frac_good":0.578,"err_mHa":0.302,"vqe_noisy_err_mHa":1340.786,"vqe_ideal_err_mHa":100.327},{"k":4,"cx":192,"shots":10000,"dim":3136,"frac_good":0.576,"err_mHa":-0.0,"vqe_noisy_err_mHa":1340.786,"vqe_ideal_err_mHa":100.327},{"k":8,"cx":512,"shots":100,"dim":1764,"frac_good":0.34,"err_mHa":49.522,"vqe_noisy_err_mHa":2532.362,"vqe_ideal_err_mHa":95.73},{"k":8,"cx":512,"shots":300,"dim":2704,"frac_good":0.37,"err_mHa":0.333,"vqe_noisy_err_mHa":2532.362,"vqe_ideal_err_mHa":95.73},{"k":8,"cx":512,"shots":1000,"dim":3136,"frac_good":0.348,"err_mHa":-0.0,"vqe_noisy_err_mHa":2532.362,"vqe_ideal_err_mHa":95.73},{"k":8,"cx":512,"shots":3000,"dim":3136,"frac_good":0.356,"err_mHa":-0.0,"vqe_noisy_err_mHa":2532.362,"vqe_ideal_err_mHa":95.73},{"k":8,"cx":512,"shots":10000,"dim":3136,"frac_good":0.357,"err_mHa":0.0,"vqe_noisy_err_mHa":2532.362,"vqe_ideal_err_mHa":95.73}],"ft":{"1.098":{"logical_qubits":7,"cx":944,"rz":156,"budget_mHa":0.4959651857243217,"zne_err_at_1e-5_mHa":2.902872105636334,"r2_logical_target":1.7085326796221428e-06,"code_distance":9,"physical_qubits_data":1134,"t_gates":9048},"2.1":{"logical_qubits":7,"cx":1616,"rz":236,"budget_mHa":1.080391289566228,"zne_err_at_1e-5_mHa":2.4823650917795703,"r2_logical_target":4.352265882017023e-06,"code_distance":9,"physical_qubits_data":1134,"t_gates":12744}},"fv":[{"r":0.9,"ex":-107.29271237920953,"cct":-107.29205326535333},{"r":1.0,"ex":-107.5489665039805,"cct":-107.54774849256684},{"r":1.098,"ex":-107.65270379362578,"cct":-107.65052647981182},{"r":1.2,"ex":-107.67708539161261,"cct":-107.67329405413983},{"r":1.35,"ex":-107.6423742613981,"cct":-107.63498572237107},{"r":1.5,"ex":-107.58148277021981,"cct":-107.57067711136017},{"r":1.7,"ex":-107.50863113911353,"cct":-107.50783154651407},{"r":1.9,"ex":-107.46605820392936,"cct":-107.52974269215595},{"r":2.1,"ex":-107.44860390741874,"cct":-107.59266086202057},{"r":2.4,"ex":-107.4412958271341,"cct":null},{"r":2.7,"ex":-107.43931166632525,"cct":null},{"r":3.0,"ex":-107.43848948006362,"cct":-107.71894920237487}],"capped":[{"K":8,"frac":0.02040816326530612,"chip":98.43590202545727,"rnd":538.3191819350799,"cls":213.28004250013066},{"K":12,"frac":0.04591836734693878,"chip":20.904292002086322,"rnd":418.3970893803348,"cls":208.07559698565115},{"K":16,"frac":0.08163265306122448,"chip":19.18494484402089,"rnd":391.2465418937998,"cls":190.01686296320486},{"K":20,"frac":0.12755102040816327,"chip":14.955100811135935,"rnd":301.630766940697,"cls":135.32639115031486},{"K":24,"frac":0.1836734693877551,"chip":12.765720224898303,"rnd":271.04606594496516,"cls":135.18799815601312},{"K":28,"frac":0.25,"chip":9.312791450241775,"rnd":227.2859050082232,"cls":113.0022538100377},{"K":32,"frac":0.32653061224489793,"chip":7.256865575726579,"rnd":160.85118544985022,"cls":92.00358753481908},{"K":36,"frac":0.413265306122449,"chip":5.6210673883256845,"rnd":140.74623392822616,"cls":90.59639345676374},{"K":40,"frac":0.5102040816326531,"chip":5.602780828581899,"rnd":116.78532984323198,"cls":50.610729086443484},{"K":44,"frac":0.6173469387755102,"chip":1.5559069889121702,"rnd":85.41339532539638,"cls":22.50486351132963},{"K":48,"frac":0.7346938775510204,"chip":1.0070266861177402,"rnd":61.31893427973978,"cls":1.7394050260151062},{"K":52,"frac":0.8622448979591837,"chip":0.3304016184415559,"rnd":7.0811712081848555,"cls":0.2487979712810784},{"K":56,"frac":1,"chip":-4.546478749034577e-07,"rnd":-4.546478749034577e-07,"cls":-4.546478749034577e-07}]};
+const NOTES = ["Good morning. We're Team Arjuna. Arjuna was the archer who saw only the bird's eye, and our target is one number: 1.6 milli-hartree. Problem statement QC-02 asks us to compute the energy of a strongly correlated molecule to chemical accuracy while dealing with hardware noise. Our molecule is nitrogen, N≡N.", "Why nitrogen? Air is 78% nitrogen, but plants can't use it until the triple bond is broken. Industry does that with Haber–Bosch at 300 to 500 °C, using 1 to 2 percent of the world's energy, and nearly half the nitrogen in your body passed through it. Nature does the same job at room temperature with an enzyme. Designing catalysts like that needs bond energies within 1 kcal/mol, which is 1.6 milli-hartree, because a 1.4 kcal/mol error already means a tenfold error in a predicted reaction rate.", "Why can't we just compute it? Electrons repel each other, so you can't solve them one at a time; an exact answer tracks every way they can sit in the orbitals. Our toy model has 400 arrangements, nitrogen in a realistic basis has 4.3 billion, and the enzyme's core has around 10 to the 30. Now the pies: at rest one arrangement explains 93% of the molecule. Stretch the bond and the best one explains only 20%. That's static correlation, and it's what breaks standard methods.", "Here's the evidence. CCSD(T) is the method chemists call the gold standard. In the 10-electron valence space we compare it with the exact answer. At rest it's already 2.2 milli-hartree off, over budget. At 1.5 ångström it's 10.8 off. From 1.9 ångström it collapses 64 to 280 milli-hartree below the true energy, which no correct method can do, and at some lengths it doesn't converge at all. Exactly where the chemistry gets interesting, the single-reference shortcut breaks.", "Why a quantum computer fits. A bit is 0 or 1; a qubit can be a blend of both until you measure it. Give each electron slot its own qubit: 1 means an electron is there. Twelve qubits then hold a weighted blend of all 4,096 patterns at once, which is exactly the crowd of arrangements we just saw. Each measurement returns one pattern with its probability, and we repeat thousands of times to estimate the energy.", "Our pipeline. One: a rough mean-field sketch. Two: zoom in on the six orbitals that make and break the bond. Three: translate electron rules into qubit rules. Four: delete qubits that symmetry already fixes. Five: build and tune the circuit with ADAPT-VQE. Six: stress-test it under realistic noise. Seven: rescue the answer with SQD. Every step is checked against a known number before the next one runs.", "Steps two to four, on slide 7, nitrogen, looking at nitrogen's own orbitals. Six orbitals carry the bond, so we keep those and freeze the rest as a background. Jordan–Wigner rewrites each electron move as strings of Pauli operators, 247 of them. Then five symmetries, the electron counts and the molecule's mirror symmetries, fix five qubits, so we remove them exactly: 12 qubits become 7, the gate count halves from 1,856 to 888 CNOTs, and the energy agrees to a billionth of a hartree.", "Step five, ADAPT-VQE. Think hot and cold: the chip prepares a guess and measures its energy, a classical optimiser turns the knobs, and by the variational principle a lower energy is always a better guess. ADAPT grows the circuit one brick at a time, always picking the excitation with the biggest energy gradient. Result: on the exact curve at all 12 bond lengths, within chemical accuracy, including where CCSD(T) failed. Stretched bonds need more bricks: 20 at rest, 35 stretched. In the bigger 11-qubit valence space it also stays within the target at all 12 lengths.", "Now the honest part. Today's two-qubit gates fail roughly once every 300 to 1,000 operations, and our accurate circuit has about 1,048 to 1,792. We modelled that noise and tried the standard fixes. Even after readout correction and zero-noise extrapolation it's still more than 1.1 hartree off, and error cancellation would need around 10 to the 13 repeats. Mitigation only reaches the target once gates are 30 to 100 times better than today. [Pause.] So we change the chip's job. With SQD it only points at the arrangements that matter, and a normal computer solves exactly inside them. The fair test is a fixed budget: solving in a quarter of the space, the chip's picks are 9 milli-hartree off, random picks 227, so the chip carries about 24 times more information than chance. In a space this small random sampling eventually covers everything, so the real payoff is at scale: IBM has run SQD on nitrogen with 58 qubits.", "The stack. Left: our prototype, written and verified by us in Python with NumPy and SciPy. It runs today and produced every number in this deck. Right: the production tools that take the same roles at larger scale: PySCF for chemistry, qiskit-nature for translation, Qiskit and IBM's SQD add-on for algorithms, Aer and IBM Runtime for noise and real hardware, and a Streamlit dashboard with tests in CI. Each prototype module becomes the cross-check for the library that replaces it.", "What's proven: every stage matches a published or exact number, and all 66 automated checks pass. What we state up front: minimal basis, CNOT counts are upper bounds, and no hardware run yet. During the hackathon: a realistic basis, IBM noise models, IBM's SQD and one real hardware run. After that: true embedding and bigger active spaces toward iron–sulfur clusters, and long term, catalyst questions like FeMoco on early fault-tolerant machines.", "To sum up: 12 qubits down to 7, chemical accuracy at all 12 bond lengths where the gold standard collapses, and a noisy chip that, on the stretched bond, picks arrangements 24 times better than chance. Thank you. We'd love your questions."];
+const NS = "http://www.w3.org/2000/svg";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const COL = { chalk: "var(--chalk)", dim: "var(--dim)", faint: "var(--faint)", cyan: "var(--cyan)", pink: "var(--pink)", yellow: "var(--yellow)", orange: "var(--orange)", green: "var(--green)" };
+const HEX = { chalk: "#eef1ea", cyan: "#7fdde4", pink: "#ff93ba", yellow: "#ffd977", orange: "#ffb067", green: "#9fe7a4", faint: "#7d8a99" };
+
+/* ---------- chalk sketch toolkit ---------- */
+function mkRng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let R = mkRng(42);
+const J = a => (R() - .5) * 2 * a;
+function catmull(pts, closed) {
+  if (pts.length < 3) return "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L");
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, pts.length - 1)];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+class Pad {
+  constructor(svg, o = {}) { this.svg = typeof svg === "string" ? document.getElementById(svg) : svg; this.i = 0; this.base = o.base ?? .35; this.step = o.step ?? .045; this.span = o.span ?? 1.8; }
+  delay(o) { const d = o.delay ?? (this.base + Math.min(this.i++ * this.step, this.span)); return d; }
+  el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || this.g || this.svg).appendChild(e); return e; }
+  group(attrs = {}) { const g = this.el("g", attrs); return g; }
+  ink(d, o = {}) {
+    const p = this.el("path", { d, pathLength: 1, class: "ink" }, o.parent);
+    p.style.stroke = COL[o.c || "chalk"] || o.c; p.style.strokeWidth = o.w ?? 2.6; p.style.opacity = o.o ?? .95;
+    if (o.dash) { p.setAttribute("class", "fade"); p.style.strokeDasharray = o.dash; p.style.fill = "none"; p.style.strokeLinecap = "round"; }
+    p.style.animationDelay = (o.d ?? this.delay(o)) + "s";
+    if (o.dur) p.style.animationDuration = o.dur + "s";
+    return p;
+  }
+  seg(x1, y1, x2, y2, j) {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, b = J(Math.min(L * .025, 5));
+    const ov = Math.min(L * .04, 4);
+    const sx = x1 - dx / L * J(ov) + J(j), sy = y1 - dy / L * J(ov) + J(j), ex = x2 + dx / L * J(ov) + J(j), ey = y2 + dy / L * J(ov) + J(j);
+    const mx = (sx + ex) / 2 + nx * b, my = (sy + ey) / 2 + ny * b;
+    return `M${sx.toFixed(1)} ${sy.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+  }
+  line(x1, y1, x2, y2, o = {}) {
+    const d = this.delay(o), j = o.j ?? 1.4;
+    this.ink(this.seg(x1, y1, x2, y2, j), { ...o, d });
+    if (!o.single) this.ink(this.seg(x1, y1, x2, y2, j), { ...o, d: d + .08, o: (o.o ?? .95) * .45, w: (o.w ?? 2.6) * .7 });
+  }
+  poly(pts, o = {}) {
+    const d = this.delay(o), j = o.j ?? .7;
+    const mk = () => (o.smooth ? catmull(pts.map(p => [p[0] + J(j), p[1] + J(j)])) : "M" + pts.map(p => (p[0] + J(j)).toFixed(1) + " " + (p[1] + J(j)).toFixed(1)).join("L"));
+    this.ink(mk(), { ...o, d, dur: o.dur ?? 1.3 });
+    if (!o.single) this.ink(mk(), { ...o, d: d + .1, o: (o.o ?? .95) * .4, w: (o.w ?? 2.6) * .6, dur: o.dur ?? 1.3 });
+  }
+  ell(cx, cy, rx, ry, o = {}) {
+    const d = this.delay(o), rot = (o.rot || 0) * Math.PI / 180;
+    const mk = () => {
+      const pts = [], N = 26, a0 = R() * Math.PI * 2, over = .25 + R() * .25, ph = R() * 6;
+      for (let k = 0; k <= N; k++) {
+        const a = a0 + k / N * (Math.PI * 2 + over), f = 1 + .018 * Math.sin(a * 2 + ph) + J(.006);
+        const x = Math.cos(a) * rx * f, y = Math.sin(a) * ry * f;
+        pts.push([cx + x * Math.cos(rot) - y * Math.sin(rot), cy + x * Math.sin(rot) + y * Math.cos(rot)]);
+      }
+      return catmull(pts);
+    };
+    this.ink(mk(), { ...o, d });
+    if (!o.single) this.ink(mk(), { ...o, d: d + .08, o: (o.o ?? .95) * .4, w: (o.w ?? 2.6) * .7 });
+  }
+  rect(x, y, w, h, o = {}) {
+    const d = this.delay(o), j = o.j ?? 1.6;
+    for (let pass = 0; pass < (o.single ? 1 : 2); pass++) {
+      const oo = { ...o, d: d + pass * .1, o: pass ? (o.o ?? .95) * .45 : o.o, w: pass ? (o.w ?? 2.4) * .7 : (o.w ?? 2.4) };
+      this.ink(this.seg(x, y, x + w, y, j) + this.seg(x + w, y, x + w, y + h, j).replace("M", "M") + this.seg(x + w, y + h, x, y + h, j) + this.seg(x, y + h, x, y, j), oo);
+    }
+  }
+  arrow(x1, y1, x2, y2, o = {}) {
+    const d = this.delay(o), bend = o.bend || 0, hs = o.head ?? 13;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, L = Math.hypot(x2 - x1, y2 - y1) || 1, nx = -(y2 - y1) / L, ny = (x2 - x1) / L;
+    const cx = mx + nx * bend, cy = my + ny * bend;
+    const path = `M${x1.toFixed(1)} ${y1.toFixed(1)}Q${(cx + J(2)).toFixed(1)} ${(cy + J(2)).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+    this.ink(path, { ...o, d });
+    const ang = Math.atan2(y2 - cy, x2 - cx);
+    const h1 = [x2 - hs * Math.cos(ang - .45), y2 - hs * Math.sin(ang - .45)], h2 = [x2 - hs * Math.cos(ang + .45), y2 - hs * Math.sin(ang + .45)];
+    this.ink(`M${h1[0].toFixed(1)} ${h1[1].toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}L${h2[0].toFixed(1)} ${h2[1].toFixed(1)}`, { ...o, d: d + .45, dash: null });
+    if (o.label) this.text((cx + x2) / 2 + (o.lx || 0), (cy + y2) / 2 + (o.ly || -10), o.label, { size: o.ls || 17, c: o.lc || "faint", anchor: o.la || "middle", d: d + .3 });
+  }
+  text(x, y, s, o = {}) {
+    const t = this.el("text", { x, y, "text-anchor": o.anchor || "start", class: "fade" }, o.parent);
+    t.style.fontSize = (o.size || 18) + "px"; t.style.fill = COL[o.c || "dim"] || o.c;
+    if (o.font === "hand") { t.style.fontFamily = "var(--hand)"; t.style.fontWeight = 700; }
+    if (o.font === "mono") t.style.fontFamily = "var(--mono)";
+    if (o.weight) t.style.fontWeight = o.weight;
+    if (o.rot) t.setAttribute("transform", `rotate(${o.rot} ${x} ${y})`);
+    t.style.animationDelay = (o.d ?? this.delay(o)) + "s";
+    t.textContent = s; return t;
+  }
+  dot(x, y, r, o = {}) { const c = this.el("circle", { cx: x, cy: y, r, class: "fade" }, o.parent); c.style.fill = COL[o.c || "chalk"] || o.c; c.style.animationDelay = (o.d ?? this.delay(o)) + "s"; if (o.glow) c.style.filter = "drop-shadow(0 0 6px " + (HEX[o.c] || "#fff") + ")"; return c; }
+  hatch(x, y, w, h, c, o = {}) {
+    const id = "hc" + (Pad.n = (Pad.n || 0) + 1);
+    const cp = this.el("clipPath", { id }, this.svg); this.el("rect", { x, y, width: Math.max(w, 0), height: Math.max(h, 0) }, cp);
+    const g = this.el("g", { class: "fade", "clip-path": `url(#${id})` }, o.parent); g.style.animationDelay = (o.d ?? this.delay(o)) + "s";
+    const step = o.step || 7, op = o.o ?? .55;
+    for (let s = -h; s < w; s += step) {
+      const l = this.el("line", { x1: (x + s + J(.8)).toFixed(1), y1: (y + h).toFixed(1), x2: (x + s + h + J(.8)).toFixed(1), y2: y.toFixed(1) }, g);
+      l.style.stroke = COL[c] || c; l.style.strokeWidth = 1.6; l.style.opacity = op; l.style.strokeLinecap = "round";
+    }
+    return g;
+  }
+}
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
+const logs = (d0, d1, r0, r1) => { const a = Math.log10(d0), b = Math.log10(d1); return v => r0 + (Math.log10(v) - a) / (b - a) * (r1 - r0); };
+const sup = n => String(n).replace(/-/g, "⁻").replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+const pow10 = v => { const e = Math.round(Math.log10(v)); return e === 0 ? "1" : e === 1 ? "10" : e === 2 ? "100" : e === 3 ? "1,000" : "10" + sup(e); };
+function axesXY(p, o) {
+  const { x, y, W, H, m } = o;
+  p.line(m.l, H - m.b, W - m.r, H - m.b, { c: "faint", w: 2, single: true });
+  p.line(m.l, H - m.b, m.l, m.t, { c: "faint", w: 2, single: true });
+  (o.yt || []).forEach(v => { p.text(m.l - 10, y(v) + 6, o.yf ? o.yf(v) : v, { anchor: "end", size: 16, c: "faint" }); p.line(m.l - 5, y(v), m.l + 5, y(v), { c: "faint", w: 1.6, single: true }); });
+  (o.xt || []).forEach(v => { p.text(x(v), H - m.b + 24, o.xf ? o.xf(v) : v, { anchor: "middle", size: 16, c: "faint" }); });
+  if (o.xl) p.text((m.l + W - m.r) / 2, H - 4, o.xl, { anchor: "middle", size: 17, c: "faint" });
+  if (o.yl) p.text(m.l - 10, m.t - 12, o.yl, { anchor: "start", size: 17, c: "faint" });
+}
+function budget(p, x0, x1, yv, label, o = {}) {
+  p.ink(`M${x0} ${yv}L${x1} ${yv}`, { c: "green", w: 2.2, dash: "3 8", d: o.d ?? .5 });
+  p.text(o.lx ?? x1 - 4, yv + (o.below ? 22 : -9), label, { anchor: o.anchor || "end", size: 17, c: "green", d: o.d ?? .5 });
+}
+
+/* ---------- slide drawings ---------- */
+function drawN2(p, cx, cy, sep, r, o = {}) {
+  const ax = cx - sep / 2, bx = cx + sep / 2;
+  p.ell(ax, cy, r, r * .98, { c: "chalk", w: 3.2 });
+  p.ell(bx, cy, r, r * .98, { c: "chalk", w: 3.2 });
+  p.text(ax, cy + r * .32, "N", { anchor: "middle", size: r * .95, font: "hand", c: "chalk" });
+  p.text(bx, cy + r * .32, "N", { anchor: "middle", size: r * .95, font: "hand", c: "chalk" });
+  if (!o.broken) [-1, 0, 1].forEach(k => p.line(ax + r + 6, cy + k * r * .26, bx - r - 6, cy + k * r * .26, { c: "cyan", w: 4 }));
+}
+function spinG(g, t) {
+  if (REDUCE) return;
+  const a = document.createElementNS(NS, "animateTransform");
+  a.setAttribute("attributeName", "transform"); a.setAttribute("type", "rotate"); a.setAttribute("from", "0 0 0"); a.setAttribute("to", "360 0 0");
+  a.setAttribute("dur", t + "s"); a.setAttribute("repeatCount", "indefinite"); g.appendChild(a);
+}
+function orbitDots(svg, cx, cy, rx, ry, rot, n, color, t) {
+  const g = document.createElementNS(NS, "g"); g.setAttribute("transform", `translate(${cx} ${cy}) rotate(${rot})`);
+  const inner = document.createElementNS(NS, "g"); spinG(inner, t);
+  for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; const c = document.createElementNS(NS, "circle"); c.setAttribute("cx", (Math.cos(a) * rx).toFixed(1)); c.setAttribute("cy", (Math.sin(a) * rx).toFixed(1)); c.setAttribute("r", 6); c.style.fill = HEX[color]; c.style.filter = `drop-shadow(0 0 6px ${HEX[color]})`; inner.appendChild(c); }
+  const sq = document.createElementNS(NS, "g"); sq.setAttribute("transform", `scale(1 ${ry / rx})`); sq.appendChild(inner); g.appendChild(sq); svg.appendChild(g);
+}
+
+function s1() {
+  const p = new Pad("title-art", { base: .5, step: .06 });
+  p.ell(360, 300, 300, 110, { rot: -18, c: "faint", w: 2, o: .55 });
+  p.ell(360, 300, 300, 110, { rot: 38, c: "faint", w: 2, o: .45 });
+  drawN2(p, 360, 300, 330, 92);
+  // Arjuna's arrow through the bond
+  p.line(70, 70, 470, 420, { c: "yellow", w: 4.2, single: true, d: 1.4 });
+  p.line(70, 70, 40, 72, { c: "yellow", w: 3, single: true, d: 1.5 }); p.line(70, 70, 66, 42, { c: "yellow", w: 3, single: true, d: 1.5 });
+  p.line(88, 86, 58, 88, { c: "yellow", w: 3, single: true, d: 1.55 }); p.line(88, 86, 84, 58, { c: "yellow", w: 3, single: true, d: 1.55 });
+  p.ink("M470 420L446 416M470 420L466 396", { c: "yellow", w: 4.2, d: 1.9 });
+  [[350, 260], [372, 300], [352, 334]].forEach(([x, y], i) => { for (let k = 0; k < 5; k++) { const a = R() * Math.PI * 2, L = 12 + R() * 16; p.line(x, y, x + Math.cos(a) * L, y + Math.sin(a) * L, { c: "pink", w: 2.2, single: true, d: 2 + i * .05 }); } });
+  p.text(520, 520, "|N≡N⟩ → |N⟩ + |N⟩ ?", { size: 30, font: "hand", c: "faint", anchor: "middle", d: 2.2 });
+  const svg = p.svg; orbitDots(svg, 360, 300, 300, 110, -18, 3, "pink", 7); orbitDots(svg, 360, 300, 300, 110, 38, 2, "cyan", 9);
+  const b = new Pad("bow", { base: .9 });
+  b.ink("M28 8C66 26 66 70 28 88", { c: "yellow", w: 3.4 }); b.line(28, 8, 28, 88, { c: "chalk", w: 1.6, single: true });
+  b.line(10, 48, 88, 48, { c: "chalk", w: 2.6, single: true }); b.ink("M88 48L78 42M88 48L78 54", { c: "chalk", w: 2.6 });
+}
+
+function s2() {
+  const p = new Pad("shells", { base: .4, step: .12 });
+  const cx = 320, cy = 300;
+  const shells = [
+    [100, "Chapter 1 · the problem", "slides 3–5", "yellow"],
+    [168, "Chapter 2 · the idea", "slide 6", "pink"],
+    [236, "Chapter 3 · our solution", "slides 7–10", "cyan"],
+    [290, "Chapter 4 · stack + proof", "slides 11–12", "green"],
+  ];
+  shells.forEach(([r, a, b, c], i) => {
+    p.ell(cx, cy, r, r * .96, { c, w: 2.4, o: .8 });
+    const ang = -Math.PI / 2 - .12 - i * .2, lx = cx + Math.cos(ang) * r, ly = cy + Math.sin(ang) * r * .96;
+  });
+  p.ell(cx, cy, 52, 50, { c: "chalk", w: 3 });
+  p.text(cx, cy + 12, "N≡N", { anchor: "middle", size: 36, font: "hand", c: "chalk" });
+  [-70, 10, 95, 180].forEach((dy, i) => {
+    const [r, a, b, c] = shells[i], ly = cy + dy, px = cx + Math.sqrt(r * r - dy * dy / (.96 * .96));
+    p.ink(`M${px.toFixed(1)} ${ly}L${640 - 8} ${ly}`, { c, w: 1.6, dash: "3 6" });
+    p.dot(px, ly, 4, { c });
+    p.text(640, ly + 2, a, { size: 22, font: "hand", c }); p.text(640, ly + 22, b, { size: 15, c: "faint" });
+  });
+  p.text(cx, cy + 82, "the problem", { anchor: "middle", size: 18, c: "faint" });
+  orbitDots(p.svg, cx, cy, 100, 96, 0, 2, "yellow", 6); orbitDots(p.svg, cx, cy, 168, 161, 0, 1, "pink", 9);
+  orbitDots(p.svg, cx, cy, 236, 226, 0, 4, "cyan", 14); orbitDots(p.svg, cx, cy, 290, 278, 0, 2, "green", 20);
+}
+
+function s3() {
+  const p = new Pad("haber", { base: .35, step: .07 });
+  const boxes = [
+    [20, 40, 220, 120, "Air", ["78% N₂, which plants", "can't use"], "chalk"],
+    [330, 40, 330, 120, "Break N≡N", ["Haber–Bosch factory:", "300–500 °C, high pressure"], "orange"],
+    [750, 40, 220, 120, "Ammonia NH₃", ["the form plants", "can use"], "chalk"],
+    [1060, 40, 330, 120, "Fertiliser → food", ["≈ half the nitrogen in your", "body passed through it"], "chalk"],
+  ];
+  boxes.forEach(([x, y, w, h, t, s, c]) => { p.rect(x, y, w, h, { c, w: 2.4 }); p.text(x + 18, y + 44, t, { size: 34, font: "hand", c: c === "orange" ? "orange" : "chalk" }); s.forEach((ln, k) => p.text(x + 18, y + 76 + k * 22, ln, { size: 17, c: "dim" })); });
+  p.arrow(246, 100, 324, 100, { c: "chalk", w: 2.6 }); p.arrow(666, 100, 744, 100, { c: "chalk", w: 2.6 }); p.arrow(976, 100, 1054, 100, { c: "chalk", w: 2.6 });
+  p.ink("M150 166C190 238 420 236 495 214C560 198 720 236 860 166", { c: "green", w: 2.4, dash: "6 9" });
+  p.text(520, 244, "nature's route: the nitrogenase enzyme does it at room temperature", { anchor: "middle", size: 19, c: "green" });
+  p.text(495, 30, "1–2% of world energy", { anchor: "middle", size: 22, c: "pink", font: "hand" });
+}
+
+function s4() {
+  const p = new Pad("wall", { base: .45, step: .12 });
+  const W = 700, H = 330, m = { l: 230, r: 30, t: 30, b: 34 };
+  const rows = [
+    ["our toy model", "12 qubits", 400, "400"],
+    ["full valence", "16 qubits", 3136, "3,136"],
+    ["N₂, realistic basis", "52 qubits", 4.327e9, "4.3 billion"],
+    ["FeMoco enzyme core", "108 qubits", 3.79e30, "3.8 × 10³⁰"],
+  ];
+  const x = logs(1, 1e31, m.l, W - m.r), bh = 44;
+  rows.forEach(([a, b, v, s], i) => {
+    const y = m.t + i * 66;
+    p.text(m.l - 14, y + 22, a, { anchor: "end", size: 21, c: "chalk" }); p.text(m.l - 14, y + 42, b, { anchor: "end", size: 15, c: "faint" });
+    const c = i < 2 ? "cyan" : i === 2 ? "yellow" : "pink";
+    p.hatch(m.l, y + 4, x(v) - m.l, bh, c, { d: .6 + i * .15 });
+    p.rect(m.l, y + 4, x(v) - m.l, bh, { c, w: 2, single: true, d: .55 + i * .15 });
+    p.text(Math.min(x(v) + 10, W - 120), y + 34, s, { size: 22, font: "hand", c: i === 3 ? "chalk" : "chalk", anchor: i === 3 ? "end" : "start" });
+  });
+  p.text(W - m.r, 18, "electron arrangements to track (bar length on a log scale)", { anchor: "end", size: 16, c: "faint" });
+  p.text(W - m.r, m.t + 3 * 66 + 72, "too big for exact classical methods (Reiher et al., 2017)", { anchor: "end", size: 16, c: "pink" });
+
+  const q = new Pad("pies", { base: .7, step: .05 });
+  const pie = (cx, cy, r, ws, title, sub, d0) => {
+    let a = -Math.PI / 2; const cols = ["cyan", "pink", "yellow", "green", "orange", "chalk"];
+    ws.forEach((w, i) => {
+      const b = a + w * Math.PI * 2, large = w > .5 ? 1 : 0;
+      const x1 = cx + r * Math.cos(a), y1 = cy + r * Math.sin(a), x2 = cx + r * Math.cos(b), y2 = cy + r * Math.sin(b);
+      const path = q.el("path", { d: `M${cx} ${cy}L${x1.toFixed(1)} ${y1.toFixed(1)}A${r} ${r} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}Z`, class: "fade" });
+      const c = i === ws.length - 1 ? "faint" : cols[i % cols.length];
+      path.style.fill = HEX[c] || "#7d8a99"; path.style.fillOpacity = i === 0 ? .55 : i === ws.length - 1 ? .12 : .35;
+      path.style.stroke = "#17202b"; path.style.strokeWidth = 2; path.style.animationDelay = (d0 + i * .06) + "s";
+      a = b;
+    });
+    q.ell(cx, cy, r + 2, r + 2, { c: "chalk", w: 2.2, d: d0 - .1 });
+    q.text(cx, cy + r + 40, title, { anchor: "middle", size: 26, font: "hand", c: "chalk", d: d0 + .2 });
+    q.text(cx, cy + r + 64, sub, { anchor: "middle", size: 17, c: "faint", d: d0 + .25 });
+  };
+  pie(170, 120, 100, [0.926, 0.019, 0.019, 0.007, 0.007, 0.003, 0.019], "Bond at rest: 1.10 Å", "one arrangement holds 93%", .7);
+  pie(520, 120, 100, [0.196, 0.119, 0.119, 0.078, 0.05, 0.05, 0.388], "Bond stretched: 2.10 Å", "the best one holds only 20%", 1.1);
+  q.text(170, 126, "93%", { anchor: "middle", size: 34, font: "hand", c: "chalk", d: 1 });
+  q.text(468, 92, "20%", { anchor: "middle", size: 30, font: "hand", c: "chalk", d: 1.4 });
+  q.arrow(300, 120, 390, 120, { c: "pink", w: 2.6, d: 1, label: "stretch", ly: -14, lc: "pink" });
+}
+
+function s5() {
+  const P = DATA.pes;
+  const p = new Pad("curve", { base: .45, step: .06 });
+  const W = 520, H = 270, m = { l: 34, r: 16, t: 20, b: 36 };
+  const x = lin(.85, 3.05, m.l, W - m.r), y = lin(-107.70, -106.40, H - m.b, m.t);
+  p.line(m.l, H - m.b, W - m.r, H - m.b, { c: "faint", w: 1.8, single: true }); p.line(m.l, H - m.b, m.l, m.t, { c: "faint", w: 1.8, single: true });
+  p.poly(P.map(r => [x(r.r), y(r.hf)]), { c: "faint", w: 2.4, smooth: true });
+  p.poly(P.map(r => [x(r.r), y(r.ex)]), { c: "chalk", w: 3.2, smooth: true });
+  p.text(x(1.42), y(-106.72), "single-arrangement guess (wrong)", { anchor: "start", size: 16, c: "faint" });
+  p.text(x(2.95), y(-107.36), "exact answer", { anchor: "end", size: 18, c: "chalk" });
+  p.arrow(x(1.2), y(-107.645) + 4, x(1.2), y(-107.44) - 2, { c: "pink", w: 2.2, head: 9, d: 1.4 });
+  p.text(x(1.2) + 10, y(-107.50), "energy to", { size: 16, c: "pink" }); p.text(x(1.2) + 10, y(-107.56), "break it", { size: 16, c: "pink" });
+  p.text((m.l + W - m.r) / 2, H - 8, "pull the atoms apart →", { anchor: "middle", size: 17, c: "faint" });
+  p.text(m.l + 4, m.t - 4, "energy", { size: 16, c: "faint" });
+
+  const F = DATA.fv;
+  const q = new Pad("ccerr", { base: .6, step: .08 });
+  const W2 = 860, H2 = 440, m2 = { l: 80, r: 24, t: 40, b: 50 };
+  const X = lin(.85, 3.05, m2.l, W2 - m2.r), Y = logs(.3, 700, H2 - m2.b, m2.t);
+  axesXY(q, { x: X, y: Y, W: W2, H: H2, m: m2, yt: [1, 10, 100], yf: v => v, xt: [1, 1.5, 2, 2.5, 3], xf: v => v.toFixed(1) + " Å", xl: "N–N distance", yl: "how far off CCSD(T) is (mHa, log)" });
+  q.hatch(m2.l + 2, Y(1.6), W2 - m2.r - m2.l - 2, Y(.3) - Y(1.6), "green", { o: .18, step: 10, d: .5 });
+  budget(q, m2.l, W2 - m2.r, Y(1.6), "inside 1.6 mHa = chemically accurate", { below: true, d: .6 });
+  const e = r => (r.cct - r.ex) * 1e3, up = F.filter(r => r.cct !== null && e(r) > -1.6), dn = F.filter(r => r.cct !== null && e(r) <= -1.6), nc = F.filter(r => r.cct === null);
+  q.poly(up.map(r => [X(r.r), Y(Math.max(e(r), .3))]), { c: "orange", w: 3.4 });
+  up.forEach((r, i) => q.dot(X(r.r), Y(Math.max(e(r), .3)), 6, { c: "orange", d: .9 + i * .08 }));
+  dn.forEach((r, i) => { const xx = X(r.r), yy = Y(-e(r)); q.ink(`M${xx - 10} ${yy - 8}L${xx + 10} ${yy - 8}L${xx} ${yy + 10}Z`, { c: "pink", w: 3, d: 1.5 + i * .1 }); });
+  nc.forEach((r, i) => { const xx = X(r.r), yy = Y(450); q.line(xx - 10, yy - 10, xx + 10, yy + 10, { c: "pink", w: 3.2, single: true, d: 1.9 + i * .08 }); q.line(xx + 10, yy - 10, xx - 10, yy + 10, { c: "pink", w: 3.2, single: true, d: 1.95 + i * .08 }); });
+  q.text(X(2.45), Y(28), "▼ collapsed BELOW the true energy", { anchor: "middle", size: 20, font: "hand", c: "pink", d: 1.9 });
+  q.text(X(2.55), Y(450) - 22, "× no convergence", { anchor: "middle", size: 18, font: "hand", c: "pink", d: 2.1 });
+  const e0 = F.find(r => Math.abs(r.r - 1.098) < 1e-3), e15 = F.find(r => Math.abs(r.r - 1.5) < 1e-3);
+  q.text(X(1.0), Y(.42), "+2.2 mHa at rest: already over budget", { size: 18, c: "orange", d: 1.3 });
+  q.text(X(1.5), Y(e(e15)) - 18, "+10.8 mHa", { anchor: "middle", size: 22, font: "hand", c: "orange", d: 1.4 });
+}
+
+function s6() {
+  const p = new Pad("q101", { base: .45, step: .05 });
+  // panel A: bit vs qubit
+  p.text(40, 30, "① bit vs qubit", { size: 28, font: "hand", c: "yellow" });
+  p.rect(40, 70, 120, 64, { c: "chalk" }); p.text(100, 112, "0 or 1", { anchor: "middle", size: 22, c: "chalk" }); p.text(100, 160, "a switch", { anchor: "middle", size: 16, c: "faint" });
+  p.ell(300, 200, 100, 100, { c: "cyan" }); p.ell(300, 200, 100, 30, { c: "cyan", o: .5, w: 1.8 });
+  p.text(300, 88, "|1⟩", { anchor: "middle", size: 20, font: "mono", c: "chalk" }); p.text(300, 330, "|0⟩", { anchor: "middle", size: 20, font: "mono", c: "chalk" });
+  p.arrow(300, 200, 362, 132, { c: "pink", w: 3.2, d: 1 });
+  p.text(300, 370, "a|0⟩ + b|1⟩ · a blend until measured", { anchor: "middle", size: 17, c: "dim" });
+  orbitDots(p.svg, 300, 200, 100, 30, 0, 1, "pink", 6);
+  // panel B: orbitals as qubits
+  const bx = 520;
+  p.text(bx, 30, "② one qubit per electron slot", { size: 28, font: "hand", c: "yellow" });
+  const lab = ["πᵤ", "πᵤ", "3σg", "πg*", "πg*", "3σᵤ*"];
+  for (let s = 0; s < 2; s++) for (let k = 0; k < 6; k++) {
+    const xx = bx + 10 + k * 66, yy = 80 + s * 150, occ = k < 3;
+    p.rect(xx, yy, 52, 52, { c: occ ? "cyan" : "faint", w: 2.2, single: true, d: .7 + (s * 6 + k) * .03 });
+    p.text(xx + 26, yy + 36, occ ? (s ? "↓" : "↑") : "", { anchor: "middle", size: 28, c: s ? "pink" : "cyan", d: .9 + k * .03 });
+    p.text(xx + 26, yy + 76, occ ? "1" : "0", { anchor: "middle", size: 22, font: "mono", c: occ ? "chalk" : "faint", d: 1 + k * .03 });
+    if (!s) p.text(xx + 26, yy - 10, lab[k], { anchor: "middle", size: 14, c: "faint" });
+  }
+  p.text(bx - 6, 112, "α", { anchor: "end", size: 20, c: "cyan" }); p.text(bx - 6, 262, "β", { anchor: "end", size: 20, c: "pink" });
+  p.text(bx + 200, 370, "12 orbitals × spin → 12 qubits: 111000 111000", { anchor: "middle", size: 17, c: "dim" });
+  // panel C: blend of arrangements
+  const cx0 = 990;
+  p.text(cx0, 30, "③ a blend of all arrangements", { size: 28, font: "hand", c: "yellow" });
+  const pats = [["111000 111000", .44], ["110100 110100", .19], ["101010 101010", .12], ["011100 011100", .08], ["110010 101100", .05], ["…4,091 more", .02]];
+  pats.forEach(([s, w], i) => {
+    const yy = 80 + i * 46;
+    p.text(cx0, yy + 22, s, { size: 18, font: "mono", c: i === 5 ? "faint" : "chalk", d: .8 + i * .07 });
+    p.hatch(cx0 + 190, yy + 4, 230 * Math.sqrt(w), 24, "cyan", { d: .9 + i * .07, o: .6 });
+    p.rect(cx0 + 190, yy + 4, 230 * Math.sqrt(w), 24, { c: "cyan", w: 1.8, single: true, d: .9 + i * .07 });
+  });
+  p.text(cx0 + 200, 370, "measure → one pattern, picked with these odds", { anchor: "middle", size: 17, c: "dim" });
+}
+
+function overlayFor(container) {
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "overlay d");
+  svg.setAttribute("width", container.offsetWidth); svg.setAttribute("height", container.offsetHeight);
+  svg.setAttribute("viewBox", `0 0 ${container.offsetWidth} ${container.offsetHeight}`); container.appendChild(svg); return svg;
+}
+const box = el => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+
+function s7() {
+  const cont = document.getElementById("flow"), cards = [...cont.querySelectorAll(".card")];
+  const svg = overlayFor(cont), p = new Pad(svg, { base: 1.2, step: .14 });
+  const b = cards.map(box);
+  const right = (a, c) => p.arrow(a.x + a.w + 4, a.y + a.h / 2, c.x - 6, c.y + c.h / 2, { c: "pink", w: 2.8 });
+  const left = (a, c) => p.arrow(a.x - 4, a.y + a.h / 2, c.x + c.w + 6, c.y + c.h / 2, { c: "pink", w: 2.8 });
+  right(b[0], b[1]); right(b[1], b[2]); right(b[2], b[3]);
+  p.arrow(b[3].x + b[3].w / 2, b[3].y + b[3].h + 4, b[4].x + b[4].w / 2, b[4].y - 6, { c: "pink", w: 2.8 });
+  left(b[4], b[5]); left(b[5], b[6]);
+  const c5 = b[4]; p.arrow(c5.x + c5.w - 30, c5.y + c5.h + 8, c5.x + 40, c5.y + c5.h + 8, { c: "cyan", w: 2.2, bend: -26, label: "repeat until within 1.6 mHa", ly: 30, lc: "cyan", ls: 16 });
+}
+
+function s8() {
+  const p = new Pad("ladder", { base: .4, step: .06 });
+  const lv = [["3σᵤ*", 1, 0, true], ["1πg*", 2, 0, true], ["3σg", 1, 2, true], ["1πᵤ", 2, 2, true], ["2σᵤ", 1, 2, false], ["2σg", 1, 2, false], ["1σ core", 2, 2, false]];
+  p.hatch(60, 18, 350, 232, "cyan", { o: .1, step: 12, d: .3 });
+  p.rect(60, 18, 350, 232, { c: "cyan", w: 2, single: true, d: .3 });
+  p.text(400, 44, "active: 6 orbitals, 6 e⁻", { anchor: "end", size: 19, c: "cyan" });
+  lv.forEach(([n, deg, e, act], i) => {
+    const y = 70 + i * 52 + (act ? 0 : 30);
+    p.text(110, y + 6, n, { anchor: "end", size: 18, c: act ? "chalk" : "faint" });
+    for (let k = 0; k < deg; k++) { const x0 = 130 + k * 120; p.line(x0, y, x0 + 96, y, { c: act ? "cyan" : "faint", w: 3, single: true }); if (e) p.text(x0 + 48, y - 6, "↑↓", { anchor: "middle", size: 24, c: act ? "pink" : "faint" }); }
+  });
+  p.text(235, 432, "frozen background (mean field)", { anchor: "middle", size: 17, c: "faint" });
+  p.text(20, 16, "② zoom in", { size: 26, font: "hand", c: "yellow" });
+
+  const q = new Pad("jw", { base: .8, step: .07 });
+  q.text(10, 16, "③ translate", { size: 26, font: "hand", c: "yellow" });
+  q.text(20, 80, "electron language", { size: 18, c: "faint" });
+  q.text(20, 120, "a†₀ a₃", { size: 34, font: "mono", c: "pink" });
+  q.text(20, 152, "\"move an electron 3 → 0\"", { size: 16, c: "dim" });
+  q.arrow(150, 178, 150, 240, { c: "chalk", w: 2.6, label: "Jordan–Wigner", lx: 76, ly: 14, ls: 17, lc: "cyan" });
+  q.text(20, 284, "qubit language", { size: 18, c: "faint" });
+  q.text(20, 322, "½(X₀Z₁Z₂X₃ +", { size: 22, font: "mono", c: "cyan" });
+  q.text(36, 354, "Y₀Z₁Z₂Y₃ + …)", { size: 22, font: "mono", c: "cyan" });
+  q.text(20, 400, "247 such terms make H", { size: 17, c: "dim" });
+
+  const t = new Pad("taper", { base: .6, step: .05 });
+  t.text(10, 16, "④ shrink", { size: 26, font: "hand", c: "yellow" });
+  const cut = { 2: "α-electron count", 5: "β-electron count", 7: "mirror x–z", 9: "mirror y–z", 11: "inversion" };
+  for (let q2 = 11; q2 >= 0; q2--) {
+    const y = 52 + (11 - q2) * 31, c = cut[q2];
+    t.text(70, y + 6, "q" + q2, { anchor: "end", size: 16, font: "mono", c: c ? "faint" : "chalk" });
+    if (c) { t.ink(`M84 ${y}L380 ${y}`, { c: "pink", w: 2, dash: "7 8" }); t.line(214, y - 10, 234, y + 10, { c: "pink", w: 2.6, single: true, d: 1.4 }); t.line(234, y - 10, 214, y + 10, { c: "pink", w: 2.6, single: true, d: 1.45 }); t.text(396, y + 6, "fixed by " + c, { size: 16, c: "pink", d: 1.5 }); }
+    else t.line(84, y, 380, y, { c: "cyan", w: 2.6, single: true });
+  }
+  t.text(232, 432, "12 → 7 qubits, same exact energy (to 10⁻⁹ Ha)", { anchor: "middle", size: 18, c: "chalk" });
+}
+
+function s9() {
+  const p = new Pad("loop", { base: .5, step: .1 });
+  const B = (x, y, w, h, t1, t2, c) => { p.rect(x, y, w, h, { c, w: 2.4 }); p.text(x + w / 2, y + 36, t1, { anchor: "middle", size: 27, font: "hand", c: c === "chalk" ? "chalk" : c }); p.text(x + w / 2, y + 62, t2, { anchor: "middle", size: 16, c: "dim" }); };
+  B(6, 30, 236, 86, "Quantum chip", "make a guess, measure it", "cyan");
+  B(358, 30, 236, 86, "Normal computer", "turn the knobs θ", "orange");
+  B(175, 214, 250, 86, "Pick next brick", "biggest energy gradient", "pink");
+  p.arrow(248, 56, 352, 56, { c: "chalk", w: 2.4 }); p.text(300, 46, "energy E(θ)", { anchor: "middle", size: 16, c: "faint" });
+  p.arrow(352, 94, 248, 94, { c: "chalk", w: 2.4 }); p.text(300, 116, "new knobs θ", { anchor: "middle", size: 16, c: "faint" });
+  p.arrow(150, 124, 230, 206, { c: "chalk", w: 2.4, bend: 18, label: "converged?", lx: -70, ly: 4 });
+  p.arrow(372, 206, 455, 124, { c: "chalk", w: 2.4, bend: 18, label: "add 1 brick", lx: 74, ly: 6 });
+  p.text(300, 330, "stop when no brick helps (gradient ≈ 0)", { anchor: "middle", size: 17, c: "green" });
+
+  const P = DATA.pes;
+  const q = new Pad("pes", { base: .7, step: .05 });
+  const W = 800, H = 300, m = { l: 92, r: 20, t: 30, b: 44 };
+  const x = lin(.85, 3.05, m.l, W - m.r), y = lin(-107.70, -106.40, H - m.b, m.t);
+  axesXY(q, { x, y, W, H, m, yt: [-107.6, -107.2, -106.8, -106.4], yf: v => v.toFixed(1), xt: [1, 1.5, 2, 2.5, 3], xf: v => v.toFixed(1) + " Å", yl: "energy (hartree)" });
+  q.poly(P.map(r => [x(r.r), y(r.hf)]), { c: "faint", w: 2.4, smooth: true });
+  q.poly(P.map(r => [x(r.r), y(r.ex)]), { c: "chalk", w: 3, smooth: true });
+  P.forEach((r, i) => q.rect(x(r.r) - 8, y(r.ad) - 8, 16, 16, { c: "cyan", w: 2.6, single: true, j: .6, d: 1.3 + i * .07 }));
+  q.text(x(1.7), y(-106.66), "single-arrangement guess", { anchor: "middle", size: 17, c: "faint" });
+  q.text(x(2.3), y(-107.10), "ADAPT-VQE (□) sits on the exact curve", { anchor: "middle", size: 19, c: "cyan", d: 2 });
+  q.text(x(2.3), y(-107.10) + 24, "12/12 bond lengths within 1.6 mHa", { anchor: "middle", size: 19, c: "cyan", d: 2.1 });
+
+  const c = new Pad("conv", { base: 1.2, step: .05 });
+  const W2 = 800, H2 = 210, m2 = { l: 92, r: 20, t: 26, b: 40 };
+  const X = lin(0, 56, m2.l, W2 - m2.r), Y = logs(.001, 300, H2 - m2.b, m2.t);
+  axesXY(c, { x: X, y: Y, W: W2, H: H2, m: m2, yt: [.001, .1, 10], yf: v => v >= 1 ? v : pow10(v), xt: [0, 10, 20, 30, 40, 50], xl: "bricks added", yl: "error (mHa, log)" });
+  budget(c, m2.l, W2 - m2.r, Y(1.6), "1.6 mHa", { d: 1.3 });
+  [["cas66_1.098", "cyan", "at rest: 20 bricks"], ["cas66_2.1", "pink", "stretched: 35 bricks"]].forEach(([k, col, lab], i) => {
+    const v = DATA.conv[k].slice(0, 57);
+    c.poly(v.map((e, j) => [X(j), Y(Math.min(Math.max(e, .001), 300))]), { c: col, w: 2.8, d: 1.4 + i * .3 });
+    const kk = v.findIndex(e => e < 1.6);
+    c.dot(X(kk), Y(v[kk]), 6, { c: col, d: 2.2 + i * .2 });
+    c.text(X(kk) + 12, Y(v[kk]) + (i ? -14 : 24), lab, { size: 17, c: col, d: 2.3 + i * .2 });
+  });
+}
+
+function s10() {
+  const N = DATA.noise;
+  const p = new Pad("sweep", { base: .6, step: .06 });
+  const W = 700, H = 300, m = { l: 74, r: 18, t: 34, b: 46 };
+  const x = logs(1e-6, 4e-3, m.l, W - m.r), y = logs(.3, 5000, H - m.b, m.t);
+  axesXY(p, { x, y, W, H, m, yt: [1, 10, 100, 1000], yf: v => v.toLocaleString("en-US"), xt: [1e-6, 1e-5, 1e-4, 1e-3], xf: pow10, xl: "two-qubit gate error rate", yl: "energy error (mHa)" });
+  p.hatch(x(1.2e-3), m.t, x(3.6e-3) - x(1.2e-3), y(.3) - m.t, "orange", { o: .2, step: 9, d: .5 });
+  p.text(x(2.1e-3), m.t + 20, "today", { anchor: "middle", size: 20, font: "hand", c: "orange" });
+  p.hatch(x(3e-5), m.t, x(1e-4) - x(3e-5), y(.3) - m.t, "green", { o: .25, step: 9, d: .5 });
+  p.text(x(5.5e-5), m.t + 20, "needed", { anchor: "middle", size: 20, font: "hand", c: "green" });
+  budget(p, m.l, W - m.r, y(1.6), "1.6 mHa", { d: .6, below: true });
+  const s0 = N["1.098"].sweep, s1 = N["2.1"].sweep, best = s => Math.max(Math.min(Math.abs(s.rich), Math.abs(s.exp)), .3);
+  p.poly(s0.map(s => [x(s.r2), y(Math.max(Math.abs(s.rem), .3))]), { c: "faint", w: 2.2 });
+  p.poly(s0.map(s => [x(s.r2), y(best(s))]), { c: "cyan", w: 3 });
+  p.poly(s1.map(s => [x(s.r2), y(best(s))]), { c: "pink", w: 3 });
+  s0.forEach((s, i) => p.dot(x(s.r2), y(best(s)), 4.5, { c: "cyan", d: 1.4 + i * .05 }));
+  s1.forEach((s, i) => p.dot(x(s.r2), y(best(s)), 4.5, { c: "pink", d: 1.5 + i * .05 }));
+  p.text(x(1.2e-5), y(120), "readout fix only", { size: 16, c: "faint", d: 1.6 });
+  p.text(x(1.6e-4), y(4), "+ ZNE, all gates amplified", { size: 16, c: "cyan", d: 1.7 });
+
+  const Cp = DATA.capped;
+  const q = new Pad("sqd", { base: .7, step: .06 });
+  const W2 = 700, H2 = 300, m2 = { l: 74, r: 18, t: 34, b: 46 };
+  const X = lin(0, 1, m2.l, W2 - m2.r), Y = logs(.1, 1000, H2 - m2.b, m2.t);
+  axesXY(q, { x: X, y: Y, W: W2, H: H2, m: m2, yt: [.1, 1, 10, 100, 1000], yf: v => v.toLocaleString("en-US"), xt: [0, .25, .5, .75, 1], xf: v => (100 * v).toFixed(0) + "%", xl: "share of the space solved exactly", yl: "energy error (mHa)" });
+  q.hatch(m2.l + 2, Y(1.6), W2 - m2.r - m2.l - 2, Y(.1) - Y(1.6), "green", { o: .18, step: 10, d: .5 });
+  budget(q, m2.l, W2 - m2.r, Y(1.6), "1.6 mHa", { d: .6 });
+  const ln = (key, col, d0) => { const pts = Cp.filter(c => c[key] !== null).map(c => [X(c.frac), Y(Math.max(c[key], .1))]); q.poly(pts, { c: col, w: 3, d: d0 }); pts.forEach((pt, i) => q.dot(pt[0], pt[1], 4.5, { c: col, d: d0 + .3 + i * .04 })); };
+  ln("rnd", "orange", .8); ln("cls", "faint", 1); ln("chip", "green", 1.2);
+  q.text(X(.55), Y(260), "random picks", { size: 18, font: "hand", c: "orange", d: 1.6 });
+  q.text(X(.40), Y(38), "classical ranking", { size: 18, font: "hand", c: "chalk", d: 1.7 });
+  q.text(X(.10), Y(3.2), "chip-picked", { size: 20, font: "hand", c: "green", d: 1.8 });
+  q.ink(`M${X(.25)} ${m2.t}L${X(.25)} ${H2 - m2.b}`, { c: "yellow", w: 1.6, dash: "3 6", d: 1.4 });
+}
+
+function s11() {
+  const cont = document.getElementById("stack"), boxes = [...cont.querySelectorAll(".box")];
+  const svg = overlayFor(cont), p = new Pad(svg, { base: 1.4, step: .06 });
+  for (let i = 0; i + 2 < boxes.length; i += 2) {
+    for (let c = 0; c < 2; c++) { const a = box(boxes[i + c]), b = box(boxes[i + 2 + c]); p.arrow(a.x + a.w / 2, a.y + a.h + 2, b.x + b.w / 2, b.y - 3, { c: c ? "cyan" : "green", w: 2, head: 9 }); }
+  }
+  for (let i = 0; i < boxes.length; i += 2) { const a = box(boxes[i]), b = box(boxes[i + 1]); p.arrow(a.x + a.w + 6, a.y + a.h / 2, b.x - 8, b.y + b.h / 2, { c: "faint", w: 1.8, head: 9 }); }
+}
+
+function s12() {
+  const p = new Pad("checks", { base: .5, step: .14 });
+  const items = [["Integrals + Hartree–Fock", "water molecule, textbook value, to 3 × 10⁻¹³ Ha"], ["CCSD and (T)", "Crawford reference projects, to 10⁻¹⁰ Ha"], ["Qubit Hamiltonian", "reproduces Hartree–Fock and exact energies"], ["Tapering", "12- and 7-qubit runs agree to 10⁻⁹ Ha"], ["Noise simulator", "noiseless limit matches exact maths to 10⁻¹⁰"], ["All 66 automated checks pass", "14 Python + 52 browser-engine checks"]];
+  items.forEach(([a, b], i) => {
+    const y = 18 + i * 58;
+    p.rect(8, y, 30, 30, { c: "chalk", w: 2, single: true });
+    p.ink(`M13 ${y + 15}L22 ${y + 26}L44 ${y - 6}`, { c: "green", w: 3.4 });
+    p.text(60, y + 18, a, { size: 23, font: "hand", c: i === 5 ? "green" : "chalk" });
+    p.text(60, y + 40, b, { size: 16, c: "faint" });
+  });
+
+  const q = new Pad("road", { base: .6, step: .1 });
+  const ys = [40, 170, 300, 430];
+  q.ink("M40 20C56 90 24 140 40 200S56 300 40 360 26 470 40 540", { c: "pink", w: 3.2, dur: 1.6 });
+  q.ink("M40 540L30 522M40 540L52 524", { c: "pink", w: 3.2, d: 1.8 });
+  const stops = [
+    ["Now", "Verified prototype from integrals to SQD · 66 checks pass · every number in this deck comes from real runs", "green"],
+    ["During the hackathon", "PySCF with a realistic basis · qiskit-nature · IBM backend noise models · qiskit-addon-sqd · one real IBM run · live dashboard", "cyan"],
+    ["Next", "True embedding (DMET) · DMRG and NEVPT2 references · bigger active spaces such as iron–sulfur clusters", "yellow"],
+    ["Long term", "Catalyst questions like FeMoco on early fault-tolerant machines. Our own case already sizes at 7 logical qubits on a distance-15 surface code (~6,300 physical qubits before magic-state factories)", "pink"],
+  ];
+  stops.forEach(([tt, s, c], i) => {
+    const y = ys[i];
+    q.dot(40, y, 11, { c, glow: true, d: .8 + i * .3 });
+    q.text(74, y + 10, tt, { size: 34, font: "hand", c, d: .9 + i * .3 });
+    wrapText(q, 74, y + 40, s, 700, { size: 18, c: "dim", d: 1 + i * .3 });
+  });
+}
+function wrapText(p, x, y, s, maxW, o) {
+  const words = s.split(" "), lines = []; let cur = "";
+  const per = (o.size || 17) * .48;
+  words.forEach(w => { if ((cur + " " + w).trim().length * per > maxW) { lines.push(cur.trim()); cur = w; } else cur += " " + w; });
+  if (cur.trim()) lines.push(cur.trim());
+  lines.forEach((l, i) => p.text(x, y + i * (o.size + 6), l, o));
+}
+
+function s13() {
+  const p = new Pad("end-art", { base: .5, step: .08 });
+  p.ell(150, 260, 86, 84, { c: "chalk", w: 3.2 }); p.ell(490, 260, 86, 84, { c: "chalk", w: 3.2 });
+  p.text(150, 290, "N", { anchor: "middle", size: 84, font: "hand", c: "chalk" }); p.text(490, 290, "N", { anchor: "middle", size: 84, font: "hand", c: "chalk" });
+  [-1, 0, 1].forEach(k => { p.line(242, 260 + k * 22, 292, 252 + k * 26, { c: "cyan", w: 3.4, single: true }); p.line(348, 268 + k * 26, 398, 260 + k * 22, { c: "cyan", w: 3.4, single: true }); });
+  p.line(60, 470, 560, 70, { c: "yellow", w: 4, single: true, d: 1.2 });
+  p.ink("M560 70L536 76M560 70L552 94", { c: "yellow", w: 4, d: 1.6 });
+  p.text(320, 470, "|N≡N⟩ → |N⟩ + |N⟩", { anchor: "middle", size: 40, font: "hand", c: "cyan", d: 1.8 });
+  orbitDots(p.svg, 150, 260, 130, 46, -20, 2, "pink", 6); orbitDots(p.svg, 490, 260, 130, 46, 20, 2, "pink", 7);
+}
+
+/* sketched borders around HTML boxes */
+function sketchBoxes() {
+  document.querySelectorAll("[data-sk]").forEach((el, i) => {
+    const w = el.offsetWidth, h = el.offsetHeight, svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "skb"); svg.setAttribute("width", w + 12); svg.setAttribute("height", h + 12); svg.setAttribute("viewBox", `0 0 ${w + 12} ${h + 12}`);
+    el.prepend(svg);
+    const p = new Pad(svg, { base: .35 + (i % 4) * .08 });
+    p.rect(6, 6, w, h, { c: el.dataset.sk, w: 2.2, j: 1.4, o: .9 });
+  });
+}
+
+/* blackboard dust + ghost equations */
+function dust() {
+  const cv = document.getElementById("dust"), ctx = cv.getContext("2d");
+  const g = ctx.createRadialGradient(800, 380, 100, 800, 450, 1000); g.addColorStop(0, "#1b2531"); g.addColorStop(1, "#121921");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1600, 900);
+  const r = mkRng(9);
+  for (let i = 0; i < 26; i++) { ctx.strokeStyle = `rgba(238,241,234,${.012 + r() * .02})`; ctx.lineWidth = 40 + r() * 70; ctx.lineCap = "round"; ctx.beginPath(); const x = r() * 1600, y = r() * 900; ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 150 - r() * 300, y + 60 - r() * 120, x + 200 - r() * 400, y + 40 - r() * 80); ctx.stroke(); }
+  const img = ctx.getImageData(0, 0, 1600, 900), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (r() - .5) * 10; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+  const eqs = ["Ĥ|ψ⟩ = E|ψ⟩", "E(θ) ≥ E₀", "a†ₚ aq", "⟨ψ|H|ψ⟩", "2ⁿ", "e^(−iθP/2)", "[H, A]", "|0⟩ |1⟩", "ΔG", "1 kcal/mol", "σ π π*", "Z₂"];
+  ctx.fillStyle = "rgba(238,241,234,.045)";
+  eqs.forEach((e, i) => { ctx.save(); ctx.translate(80 + r() * 1440, 60 + r() * 760); ctx.rotate((r() - .5) * .25); ctx.font = `700 ${34 + r() * 30}px Caveat, "Comic Sans MS", cursive`; ctx.fillText(e, 0, 0); ctx.restore(); });
+}
+
+/* element tile */
+function tile(n, sym, name) {
+  document.getElementById("tz").textContent = n; document.getElementById("ts").textContent = sym; document.getElementById("tn").textContent = name;
+  const svg = document.getElementById("bohr"); svg.innerHTML = "";
+  const shells = [Math.min(n, 2), Math.min(Math.max(n - 2, 0), 8), Math.max(n - 10, 0)].filter(k => k > 0);
+  const nuc = document.createElementNS(NS, "circle"); nuc.setAttribute("r", 4.5); nuc.style.fill = HEX.pink; svg.appendChild(nuc);
+  shells.forEach((k, i) => {
+    const r = 12 + i * 10;
+    const c = document.createElementNS(NS, "circle"); c.setAttribute("r", r); c.style.fill = "none"; c.style.stroke = "#7d8a99"; c.style.strokeWidth = 1.2; svg.appendChild(c);
+    const g = document.createElementNS(NS, "g"); spinG(g, 5 + i * 3);
+    for (let j = 0; j < k; j++) { const a = j / k * Math.PI * 2, e = document.createElementNS(NS, "circle"); e.setAttribute("cx", (Math.cos(a) * r).toFixed(2)); e.setAttribute("cy", (Math.sin(a) * r).toFixed(2)); e.setAttribute("r", 2.6); e.style.fill = HEX.cyan; g.appendChild(e); }
+    svg.appendChild(g);
+  });
+}
+
+/* ---------- atom-burst transition ---------- */
+const slides = [...document.querySelectorAll(".slide")];
+const fx = document.getElementById("fx"), fctx = fx.getContext("2d");
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+fx.width = 1600 * DPR; fx.height = 900 * DPR; fctx.scale(DPR, DPR);
+let cur = -1, busy = false, queued = null;
+const easeOutBack = t => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const easeIn = t => t * t * t;
+const clamp = v => Math.max(0, Math.min(1, v));
+
+function go(n) {
+  n = Math.max(0, Math.min(slides.length - 1, n));
+  if (n === cur) return;
+  if (busy) { queued = n; return; }
+  if (cur < 0 || REDUCE) { swap(n); return; }
+  burst(n);
+}
+function swap(n) {
+  if (cur >= 0) slides[cur].classList.remove("on", "dim");
+  cur = n; slides[n].classList.add("on"); chrome();
+}
+function chrome() {
+  const s = slides[cur];
+  [...document.getElementById("dots").children].forEach((d, i) => d.setAttribute("aria-current", i === cur ? "true" : "false"));
+  tile(+s.dataset.el, s.dataset.sym, s.dataset.name);
+  document.getElementById("help").textContent = String(cur + 1).padStart(2, "0") + " / " + slides.length + " · " + s.dataset.tag;
+  document.getElementById("notes-h").textContent = "Slide " + (cur + 1) + " · " + s.dataset.tag;
+  document.getElementById("notes-b").textContent = NOTES[cur] || "";
+  try { history.replaceState(null, "", "#s" + (cur + 1)); } catch (e) {}
+}
+function burst(n) {
+  busy = true;
+  const from = slides[cur], to = slides[n], k = +to.dataset.el, dir = n > cur ? 1 : -1;
+  from.classList.add("dim"); from.style.zIndex = 1; to.style.zIndex = 3;
+  to.style.clipPath = "circle(0px at 50% 50%)";
+  const T = 1450, t0 = performance.now(), cx = 800, cy = 450, RX = 215, RY = 76;
+  const rings = [0, 60, 120].map(d => d * Math.PI / 180);
+  const es = Array.from({ length: k }, (_, j) => ({ ring: j % 3, a: j / k * Math.PI * 2 + (j % 3) * .7, trail: [], free: null }));
+  const nuc = Array.from({ length: 14 }, (_, j) => ({ a: R() * 6.28, r: 5 + R() * 18, p: j % 2 }));
+  let revealed = false, last = t0;
+  function pos(e, S) { const th = rings[e.ring]; const x = Math.cos(e.a) * RX * S, y = Math.sin(e.a) * RY * S; return [cx + x * Math.cos(th) - y * Math.sin(th), cy + x * Math.sin(th) + y * Math.cos(th)]; }
+  function frame(now) {
+    const p = clamp((now - t0) / T), dt = Math.min((now - last) / 1000, .05); last = now;
+    const a = clamp(p / .3), grow = easeOutBack(a), q = clamp((p - .56) / .44), b = easeIn(q);
+    const S = Math.max(grow, 0) * (1 + b * 8.5);
+    fctx.clearRect(0, 0, 1600, 900);
+    const ringA = Math.min(1, a * 1.6) * (1 - q * q);
+    fctx.lineCap = "round";
+    rings.forEach((th, i) => {
+      for (let pass = 0; pass < 2; pass++) {
+        fctx.save(); fctx.translate(cx + (pass ? 1.5 : 0), cy + (pass ? -1 : 0)); fctx.rotate(th + (pass ? .01 : 0));
+        fctx.strokeStyle = `rgba(238,241,234,${(pass ? .35 : .85) * ringA})`; fctx.lineWidth = (pass ? 1.5 : 3) * (1 + b * 2);
+        fctx.beginPath(); fctx.ellipse(0, 0, Math.max(RX * S, .1), Math.max(RY * S, .1), 0, 0, Math.PI * 2); fctx.stroke(); fctx.restore();
+      }
+    });
+    if (q < 1) {
+      nuc.forEach(o => { fctx.beginPath(); fctx.fillStyle = o.p ? `rgba(255,147,186,${(1 - q) * Math.min(1, a * 2)})` : `rgba(238,241,234,${.85 * (1 - q) * Math.min(1, a * 2)})`; fctx.arc(cx + Math.cos(o.a + p * 3) * o.r * grow, cy + Math.sin(o.a + p * 3) * o.r * grow, 7 * Math.max(grow, 0), 0, 7); fctx.fill(); });
+    }
+    if (q > 0 && q < .35) {
+      fctx.strokeStyle = `rgba(255,217,119,${(1 - q / .35) * .9})`; fctx.lineWidth = 3;
+      for (let i = 0; i < 12; i++) { const ang = i / 12 * 6.283 + .2, r0 = 40 + q * 300, r1 = r0 + 40 + q * 200; fctx.beginPath(); fctx.moveTo(cx + Math.cos(ang) * r0, cy + Math.sin(ang) * r0); fctx.lineTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1); fctx.stroke(); }
+    }
+    const omega = (3 + 12 * clamp((p - .1) / .46)) * dir;
+    es.forEach(e => {
+      let x, y;
+      if (q <= 0) { e.a += omega * dt; [x, y] = pos(e, Math.max(grow, .01)); }
+      else {
+        if (!e.free) { const [x0, y0] = pos(e, 1); const [x1, y1] = pos({ ...e, a: e.a + .02 * dir }, 1); const L = Math.hypot(x1 - x0, y1 - y0) || 1; e.free = { x: x0, y: y0, vx: (x1 - x0) / L, vy: (y1 - y0) / L }; }
+        const tau = q * T * .44 / 1000, dist = 700 * tau + 5200 * tau * tau;
+        x = e.free.x + e.free.vx * dist; y = e.free.y + e.free.vy * dist;
+      }
+      e.trail.push([x, y]); if (e.trail.length > 16) e.trail.shift();
+      for (let i = 1; i < e.trail.length; i++) { fctx.strokeStyle = `rgba(127,221,228,${i / e.trail.length * .6})`; fctx.lineWidth = i / e.trail.length * 6; fctx.beginPath(); fctx.moveTo(e.trail[i - 1][0], e.trail[i - 1][1]); fctx.lineTo(e.trail[i][0], e.trail[i][1]); fctx.stroke(); }
+      fctx.save(); fctx.shadowColor = "#7fdde4"; fctx.shadowBlur = 16; fctx.fillStyle = "#e9fdff"; fctx.beginPath(); fctx.arc(x, y, 6.5, 0, 7); fctx.fill(); fctx.restore();
+    });
+    if (q > 0) {
+      if (!revealed) { revealed = true; to.classList.add("on"); }
+      to.style.clipPath = `circle(${(RX * S * .98).toFixed(1)}px at 50% 50%)`;
+      from.style.opacity = String(1 - q);
+    }
+    if (p < 1) requestAnimationFrame(frame);
+    else {
+      fctx.clearRect(0, 0, 1600, 900);
+      to.style.clipPath = ""; to.style.zIndex = ""; from.style.zIndex = ""; from.classList.remove("on", "dim"); from.style.opacity = "";
+      cur = n; chrome(); busy = false;
+      if (queued !== null) { const qn = queued; queued = null; go(qn); }
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- controls ---------- */
+const dots = document.getElementById("dots");
+slides.forEach((s, i) => { const b = document.createElement("button"); b.setAttribute("role", "tab"); b.setAttribute("aria-label", `Slide ${i + 1}: ${s.dataset.tag}`); b.addEventListener("click", () => go(i)); dots.appendChild(b); });
+document.getElementById("prev").addEventListener("click", () => go((busy && queued !== null ? queued : cur) - 1));
+document.getElementById("next").addEventListener("click", () => go((busy && queued !== null ? queued : cur) + 1));
+const notes = document.getElementById("notes");
+document.getElementById("nbtn").addEventListener("click", () => { notes.hidden = !notes.hidden; });
+addEventListener("keydown", e => {
+  const base = busy && queued !== null ? queued : cur;
+  if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(base + 1); }
+  else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(base - 1); }
+  else if (e.key === "Home") go(0); else if (e.key === "End") go(slides.length - 1);
+  else if (e.key === "n" || e.key === "N") notes.hidden = !notes.hidden;
+  else if (e.key === "f" || e.key === "F") { const r = document.documentElement; try { const pr = document.fullscreenElement ? document.exitFullscreen() : r.requestFullscreen && r.requestFullscreen(); pr && pr.catch && pr.catch(() => {}); } catch (err) {} }
+});
+let tx = null, ty = null;
+addEventListener("touchstart", e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+addEventListener("touchend", e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1)); tx = null; }, { passive: true });
+document.getElementById("stage").addEventListener("click", e => {
+  if (e.target.closest("button,.term,#notes,#chrome")) return;
+  const r = e.currentTarget.getBoundingClientRect(); go(cur + ((e.clientX - r.left) > r.width * .3 ? 1 : -1));
+});
+function fit() {
+  const vv = window.visualViewport, w = vv ? vv.width : innerWidth, h = vv ? vv.height : innerHeight;
+  const k = Math.max(.05, Math.min((w - 32) / 1624, (h - 32) / 924));
+  document.getElementById("stage").style.transform = `translate(-50%, -50%) scale(${k})`;
+}
+addEventListener("resize", fit); addEventListener("orientationchange", fit);
+if (window.visualViewport) visualViewport.addEventListener("resize", fit);
+fit();
+
+function build() {
+  R = mkRng(42);
+  sketchBoxes();
+  [s1, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13].forEach(f => { try { f(); } catch (err) { console.error(f.name, err); } });
+  dust();
+  const m = /^#s(\d+)$/.exec(location.hash);
+  go(m ? +m[1] - 1 : 0);
+}
+let built = false;
+const once = () => { if (!built) { built = true; build(); } };
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(once);
+setTimeout(once, 2500);
+</script>
+
+</body>
+</html>

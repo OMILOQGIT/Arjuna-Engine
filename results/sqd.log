@@ -1,0 +1,14 @@
+FV108 R=2.1: 16->11 qubits, sector dim 3136, exact -107.448604 (0s)
+ k=4 ops, {'cx': 192, '1q': 184}: ideal VQE err 100.33 mHa, noisy VQE(+REM) err 1340.79 mHa  (68s sim)
+   SQD shots=   100: subspace  1024 dets, good-N frac 0.53, err   13.721 mHa
+   SQD shots=   300: subspace  1521 dets, good-N frac 0.56, err   12.759 mHa
+   SQD shots=  1000: subspace  2704 dets, good-N frac 0.55, err    0.491 mHa
+   SQD shots=  3000: subspace  2916 dets, good-N frac 0.58, err    0.302 mHa
+   SQD shots= 10000: subspace  3136 dets, good-N frac 0.58, err   -0.000 mHa
+ k=8 ops, {'cx': 512, '1q': 346}: ideal VQE err 95.73 mHa, noisy VQE(+REM) err 2532.36 mHa  (152s sim)
+   SQD shots=   100: subspace  1764 dets, good-N frac 0.34, err   49.522 mHa
+   SQD shots=   300: subspace  2704 dets, good-N frac 0.37, err    0.333 mHa
+   SQD shots=  1000: subspace  3136 dets, good-N frac 0.35, err   -0.000 mHa
+   SQD shots=  3000: subspace  3136 dets, good-N frac 0.36, err   -0.000 mHa
+   SQD shots= 10000: subspace  3136 dets, good-N frac 0.36, err    0.000 mHa
+saved results/sqd.json
